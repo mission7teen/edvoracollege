@@ -11,6 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
   return (
@@ -77,19 +78,49 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "EDVORA COLLEGE — Student Attendance Management" },
+      {
+        name: "description",
+        content:
+          "We transform classroom learning into real-world knowledge, skills, and success. professional careers in accounting, finance, and business. Business Studies, ...",
+      },
+      { name: "author", content: "EDVORA COLLEGE" },
+      { property: "og:title", content: "EDVORA COLLEGE — Student Attendance Management" },
+      {
+        property: "og:description",
+        content:
+          "We transform classroom learning into real-world knowledge, skills, and success. professional careers in accounting, finance, and business. Business Studies, ...",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:site", content: "@EdvoraCollege" },
+      { name: "twitter:title", content: "EDVORA COLLEGE — Student Attendance Management" },
+      {
+        name: "twitter:description",
+        content:
+          "We transform classroom learning into real-world knowledge, skills, and success. professional careers in accounting, finance, and business. Business Studies, ...",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a7b26f5d-a587-4235-9258-d28350ee4d55/id-preview-44898da3--b3ab989c-d2bf-4929-952f-41e40e1b4dbb.lovable.app-1780759671412.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a7b26f5d-a587-4235-9258-d28350ee4d55/id-preview-44898da3--b3ab989c-d2bf-4929-952f-41e40e1b4dbb.lovable.app-1780759671412.png",
+      },
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
+      },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap",
       },
     ],
   }),
@@ -120,6 +151,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
+      <Toaster richColors position="top-right" />
     </QueryClientProvider>
   );
 }
