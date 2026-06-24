@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as GuidesAttendanceSheetsRouteImport } from './routes/guides.attendance-sheets'
 import { Route as AuthenticatedTeachersRouteImport } from './routes/_authenticated.teachers'
 import { Route as AuthenticatedSubjectsRouteImport } from './routes/_authenticated.subjects'
 import { Route as AuthenticatedStudentsRouteImport } from './routes/_authenticated.students'
@@ -35,6 +36,11 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuidesAttendanceSheetsRoute = GuidesAttendanceSheetsRouteImport.update({
+  id: '/guides/attendance-sheets',
+  path: '/guides/attendance-sheets',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedTeachersRoute = AuthenticatedTeachersRouteImport.update({
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/students': typeof AuthenticatedStudentsRoute
   '/subjects': typeof AuthenticatedSubjectsRoute
   '/teachers': typeof AuthenticatedTeachersRoute
+  '/guides/attendance-sheets': typeof GuidesAttendanceSheetsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -115,6 +122,7 @@ export interface FileRoutesByTo {
   '/students': typeof AuthenticatedStudentsRoute
   '/subjects': typeof AuthenticatedSubjectsRoute
   '/teachers': typeof AuthenticatedTeachersRoute
+  '/guides/attendance-sheets': typeof GuidesAttendanceSheetsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -131,6 +139,7 @@ export interface FileRoutesById {
   '/_authenticated/students': typeof AuthenticatedStudentsRoute
   '/_authenticated/subjects': typeof AuthenticatedSubjectsRoute
   '/_authenticated/teachers': typeof AuthenticatedTeachersRoute
+  '/guides/attendance-sheets': typeof GuidesAttendanceSheetsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -147,6 +156,7 @@ export interface FileRouteTypes {
     | '/students'
     | '/subjects'
     | '/teachers'
+    | '/guides/attendance-sheets'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
     | '/students'
     | '/subjects'
     | '/teachers'
+    | '/guides/attendance-sheets'
   id:
     | '__root__'
     | '/'
@@ -176,12 +187,14 @@ export interface FileRouteTypes {
     | '/_authenticated/students'
     | '/_authenticated/subjects'
     | '/_authenticated/teachers'
+    | '/guides/attendance-sheets'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
+  GuidesAttendanceSheetsRoute: typeof GuidesAttendanceSheetsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -205,6 +218,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guides/attendance-sheets': {
+      id: '/guides/attendance-sheets'
+      path: '/guides/attendance-sheets'
+      fullPath: '/guides/attendance-sheets'
+      preLoaderRoute: typeof GuidesAttendanceSheetsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/teachers': {
@@ -314,6 +334,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
+  GuidesAttendanceSheetsRoute: GuidesAttendanceSheetsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
