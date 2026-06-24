@@ -423,7 +423,7 @@ export function StudentCSVImporter({
 
     // Construct clean payload for onImport hook matching AppStore's addStudent params
     const payload = validRows.map((row) => ({
-      studentId: row.studentId,
+      studentId: row.studentId ?? "",
       fullName: row.fullName,
       gender: row.gender,
       dob: row.dob,
