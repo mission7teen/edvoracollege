@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 const GATEWAY = "https://connector-gateway.lovable.dev/google_sheets/v4";
+const FIXED_SPREADSHEET_ID = "1iA95g6Bt9XV_D1oyiBWZmEzlcRLTgdfHEfM5Gxk21WU";
 
 const RowSchema = z.object({
   date: z.string(),
@@ -56,23 +57,15 @@ function colLetter(n: number): string {
 export const saveAttendanceToSheets = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => InputSchema.parse(d))
   .handler(async ({ data }) => {
-    let spreadsheetId = data.spreadsheetId || null;
+    // Always write to the single shared spreadsheet.
+    const spreadsheetId = FIXED_SPREADSHEET_ID;
 
-    // 1. Create spreadsheet if missing (one per batch + month)
-    if (!spreadsheetId) {
-      const created = await gw(`/spreadsheets`, {
-        method: "POST",
-        body: JSON.stringify({
-          properties: { title: `EC - ${data.month} - ${data.batchName}` },
-        }),
-      });
-      spreadsheetId = created.spreadsheetId as string;
-    }
+    // One tab per subject + batch + month
+    const tabTitle = `${data.subjectName} - ${data.batchName} - ${data.month}`.slice(0, 95);
 
-    // 2. Ensure tab for this subject exists
+    // Ensure tab exists
     const meta = await gw(`/spreadsheets/${spreadsheetId}?fields=sheets.properties`);
     const sheets: Array<{ properties: { title: string; sheetId: number } }> = meta.sheets || [];
-    const tabTitle = data.subjectName;
     if (!sheets.find((s) => s.properties.title === tabTitle)) {
       await gw(`/spreadsheets/${spreadsheetId}:batchUpdate`, {
         method: "POST",
