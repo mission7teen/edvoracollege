@@ -17,7 +17,7 @@ export function Logo({ size = 40 }: { size?: number }) {
       <div className="leading-tight">
         <div className="font-bold tracking-tight text-foreground text-base">EDVORA</div>
         <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-          A/L Commerce College
+          COLLEGE
         </div>
       </div>
     </div>
