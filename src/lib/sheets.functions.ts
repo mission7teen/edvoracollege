@@ -60,8 +60,13 @@ export const saveAttendanceToSheets = createServerFn({ method: "POST" })
     // Always write to the single shared spreadsheet.
     const spreadsheetId = FIXED_SPREADSHEET_ID;
 
-    // One tab per subject + batch + month
-    const tabTitle = `${data.subjectName} - ${data.batchName} - ${data.month}`.slice(0, 95);
+    // One tab per subject + batch + month.
+    // Google Sheet tab names cannot contain: / \ ? * [ ] : and must be <= 100 chars.
+    const sanitize = (s: string) => s.replace(/[\/\\?*\[\]:]/g, "-").trim();
+    const tabTitle = sanitize(
+      `${data.subjectName} - ${data.batchName} - ${data.month}`,
+    ).slice(0, 95);
+    const encodedTab = encodeURIComponent(tabTitle);
 
     // Ensure tab exists
     const meta = await gw(`/spreadsheets/${spreadsheetId}?fields=sheets.properties`);
@@ -90,7 +95,7 @@ export const saveAttendanceToSheets = createServerFn({ method: "POST" })
 
     // 4. Read existing tab to preserve marks from other dates this month
     const existing = await gw(
-      `/spreadsheets/${spreadsheetId}/values/${tabTitle}!A1:${lastColLetter}500`,
+      `/spreadsheets/${spreadsheetId}/values/${encodedTab}!A1:${lastColLetter}500`,
     );
     const existingRows = (existing.values || []) as unknown[][];
     // Student data rows start at index 4 (row 5). Skip trailing "Daily Total" / "Subject Teacher's Name" rows.
@@ -149,11 +154,11 @@ export const saveAttendanceToSheets = createServerFn({ method: "POST" })
     const fullMatrix = [row1, row2, row3, row4, ...studentRows];
 
     // 6. Clear and write
-    await gw(`/spreadsheets/${spreadsheetId}/values/${tabTitle}!A1:${lastColLetter}500:clear`, {
+    await gw(`/spreadsheets/${spreadsheetId}/values/${encodedTab}!A1:${lastColLetter}500:clear`, {
       method: "POST",
       body: JSON.stringify({}),
     });
-    await gw(`/spreadsheets/${spreadsheetId}/values/${tabTitle}!A1?valueInputOption=USER_ENTERED`, {
+    await gw(`/spreadsheets/${spreadsheetId}/values/${encodedTab}!A1?valueInputOption=USER_ENTERED`, {
       method: "PUT",
       body: JSON.stringify({ values: fullMatrix }),
     });
