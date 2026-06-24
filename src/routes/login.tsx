@@ -18,8 +18,7 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
-  const { login, signup, isAuthed, rememberedUser, init } = useAuth();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const { login, isAuthed, rememberedUser, init } = useAuth();
   const [email, setEmail] = useState(rememberedUser ?? "");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(!!rememberedUser);
@@ -37,18 +36,10 @@ function LoginPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    const res =
-      mode === "signin"
-        ? await login(email.trim(), password, remember)
-        : await signup(email.trim(), password);
+    const res = await login(email.trim(), password, remember);
     setLoading(false);
     if (!res.ok) {
       toast.error(res.error ?? "Authentication failed");
-      return;
-    }
-    if (mode === "signup") {
-      toast.success("Account created — you can sign in now.");
-      setMode("signin");
       return;
     }
     toast.success("Welcome back");
@@ -136,13 +127,9 @@ function LoginPage() {
               </div>
             </div>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            {mode === "signin" ? "Sign in to your dashboard" : "Create a staff account"}
-          </h1>
+          <h1 className="text-2xl font-bold tracking-tight">Sign in to your dashboard</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {mode === "signin"
-              ? "Use your staff credentials or Google account."
-              : "Sign up with your work email to access the dashboard."}
+            Use your staff credentials or Google account.
           </p>
 
           <div className="mt-6 space-y-4">
@@ -176,7 +163,7 @@ function LoginPage() {
                 <Input
                   id="password"
                   type={showPw ? "text" : "password"}
-                  autoComplete={mode === "signin" ? "current-password" : "new-password"}
+                  autoComplete="current-password"
                   className="pl-9 pr-10 h-11"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -194,24 +181,18 @@ function LoginPage() {
                 </button>
               </div>
             </div>
-            {mode === "signin" && (
-              <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between">
                 <label className="flex items-center gap-2 text-sm text-muted-foreground select-none">
                   <Checkbox checked={remember} onCheckedChange={(v) => setRemember(!!v)} />
                   Remember me
                 </label>
-              </div>
-            )}
+            </div>
             <Button
               type="submit"
               disabled={loading}
               className="w-full h-11 gradient-primary text-primary-foreground hover:opacity-95 shadow-elegant"
             >
-              {loading
-                ? "Please wait…"
-                : mode === "signin"
-                  ? "Sign in"
-                  : "Create account"}
+              {loading ? "Please wait…" : "Sign in"}
             </Button>
 
             <div className="relative my-2">
@@ -233,30 +214,8 @@ function LoginPage() {
               Continue with Google
             </Button>
 
-            <div className="text-center text-sm text-muted-foreground">
-              {mode === "signin" ? (
-                <>
-                  Need an account?{" "}
-                  <button
-                    type="button"
-                    onClick={() => setMode("signup")}
-                    className="text-primary hover:underline"
-                  >
-                    Sign up
-                  </button>
-                </>
-              ) : (
-                <>
-                  Already have an account?{" "}
-                  <button
-                    type="button"
-                    onClick={() => setMode("signin")}
-                    className="text-primary hover:underline"
-                  >
-                    Sign in
-                  </button>
-                </>
-              )}
+            <div className="text-center text-xs text-muted-foreground">
+              Accounts are created by the administrator. Contact your admin for access.
             </div>
           </div>
         </motion.form>
