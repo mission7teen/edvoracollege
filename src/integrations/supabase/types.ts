@@ -14,7 +14,246 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      app_settings: {
+        Row: {
+          data: Json
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          data?: Json
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          data?: Json
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      attendance: {
+        Row: {
+          batch_id: string | null
+          course_id: string | null
+          created_at: string
+          date: string
+          id: string
+          remarks: string | null
+          status: string
+          student_id: string
+          teacher_id: string | null
+        }
+        Insert: {
+          batch_id?: string | null
+          course_id?: string | null
+          created_at?: string
+          date: string
+          id: string
+          remarks?: string | null
+          status: string
+          student_id: string
+          teacher_id?: string | null
+        }
+        Update: {
+          batch_id?: string | null
+          course_id?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          remarks?: string | null
+          status?: string
+          student_id?: string
+          teacher_id?: string | null
+        }
+        Relationships: []
+      }
+      batches: {
+        Row: {
+          academic_year: string | null
+          code: string
+          course_id: string | null
+          created_at: string
+          id: string
+          name: string
+          schedule: string | null
+        }
+        Insert: {
+          academic_year?: string | null
+          code: string
+          course_id?: string | null
+          created_at?: string
+          id: string
+          name: string
+          schedule?: string | null
+        }
+        Update: {
+          academic_year?: string | null
+          code?: string
+          course_id?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          schedule?: string | null
+        }
+        Relationships: []
+      }
+      courses: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          duration: string | null
+          end_date: string | null
+          group_name: string | null
+          id: string
+          name: string
+          start_date: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string | null
+          duration?: string | null
+          end_date?: string | null
+          group_name?: string | null
+          id: string
+          name: string
+          start_date?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          duration?: string | null
+          end_date?: string | null
+          group_name?: string | null
+          id?: string
+          name?: string
+          start_date?: string | null
+        }
+        Relationships: []
+      }
+      students: {
+        Row: {
+          address: string | null
+          batch_id: string | null
+          course_id: string | null
+          created_at: string
+          dob: string | null
+          email: string | null
+          full_name: string
+          gender: string | null
+          guardian_name: string | null
+          guardian_phone: string | null
+          id: string
+          nic: string | null
+          phone: string | null
+          photo_url: string | null
+          registration_date: string | null
+          status: string | null
+          student_id: string
+        }
+        Insert: {
+          address?: string | null
+          batch_id?: string | null
+          course_id?: string | null
+          created_at?: string
+          dob?: string | null
+          email?: string | null
+          full_name: string
+          gender?: string | null
+          guardian_name?: string | null
+          guardian_phone?: string | null
+          id: string
+          nic?: string | null
+          phone?: string | null
+          photo_url?: string | null
+          registration_date?: string | null
+          status?: string | null
+          student_id: string
+        }
+        Update: {
+          address?: string | null
+          batch_id?: string | null
+          course_id?: string | null
+          created_at?: string
+          dob?: string | null
+          email?: string | null
+          full_name?: string
+          gender?: string | null
+          guardian_name?: string | null
+          guardian_phone?: string | null
+          id?: string
+          nic?: string | null
+          phone?: string | null
+          photo_url?: string | null
+          registration_date?: string | null
+          status?: string | null
+          student_id?: string
+        }
+        Relationships: []
+      }
+      subject_sheets: {
+        Row: {
+          created_at: string
+          key: string
+          spreadsheet_id: string
+        }
+        Insert: {
+          created_at?: string
+          key: string
+          spreadsheet_id: string
+        }
+        Update: {
+          created_at?: string
+          key?: string
+          spreadsheet_id?: string
+        }
+        Relationships: []
+      }
+      teachers: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          joined_date: string | null
+          phone: string | null
+          photo_url: string | null
+          qualification: string | null
+          status: string | null
+          subject_id: string | null
+          subject_ids: string[] | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id: string
+          joined_date?: string | null
+          phone?: string | null
+          photo_url?: string | null
+          qualification?: string | null
+          status?: string | null
+          subject_id?: string | null
+          subject_ids?: string[] | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          joined_date?: string | null
+          phone?: string | null
+          photo_url?: string | null
+          qualification?: string | null
+          status?: string | null
+          subject_id?: string | null
+          subject_ids?: string[] | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
