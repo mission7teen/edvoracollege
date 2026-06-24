@@ -1,27 +1,24 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useData } from "@/lib/store";
+import { useAuth } from "@/lib/store";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
-  beforeLoad: () => {
-    if (typeof window === "undefined") return;
-    try {
-      const raw = window.localStorage.getItem("edvora-auth-v1");
-      const authed = raw ? JSON.parse(raw)?.state?.isAuthed : false;
-      if (!authed) throw redirect({ to: "/login" });
-    } catch (e) {
-      if (e && typeof e === "object" && "to" in (e as object)) throw e;
-      throw redirect({ to: "/login" });
-    }
+  beforeLoad: async () => {
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) throw redirect({ to: "/login" });
   },
   component: AuthenticatedLayout,
 });
 
 function AuthenticatedLayout() {
   const hydrate = useData((s) => s.hydrate);
+  const init = useAuth((s) => s.init);
   useEffect(() => {
+    init();
     hydrate();
-  }, [hydrate]);
+  }, [hydrate, init]);
   return <Outlet />;
 }

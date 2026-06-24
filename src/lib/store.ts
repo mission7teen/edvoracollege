@@ -365,28 +365,60 @@ interface AuthState {
   isAuthed: boolean;
   username: string | null;
   rememberedUser: string | null;
-  login: (u: string, p: string, remember: boolean) => { ok: boolean; error?: string };
-  logout: () => void;
+  ready: boolean;
+  init: () => void;
+  login: (email: string, password: string, remember: boolean) => Promise<{ ok: boolean; error?: string }>;
+  signup: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
+  logout: () => Promise<void>;
 }
-
-const ADMIN_USER = "Edvora";
-const ADMIN_PASS = "Edvora@1234";
 
 export const useAuth = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       isAuthed: false,
       username: null,
       rememberedUser: null,
-      login: (u, p, remember) => {
-        if (u === ADMIN_USER && p === ADMIN_PASS) {
-          set({ isAuthed: true, username: u, rememberedUser: remember ? u : null });
-          return { ok: true };
-        }
-        return { ok: false, error: "Invalid username or password" };
+      ready: false,
+      init: () => {
+        if (typeof window === "undefined") return;
+        if ((get() as any).__initted) return;
+        (set as any)({ __initted: true } as any);
+        supabase.auth.getSession().then(({ data }) => {
+          const u = data.session?.user;
+          set({ isAuthed: !!u, username: u?.email ?? null, ready: true });
+        });
+        supabase.auth.onAuthStateChange((_event, session) => {
+          const u = session?.user;
+          set({ isAuthed: !!u, username: u?.email ?? null, ready: true });
+        });
       },
-      logout: () => set({ isAuthed: false, username: null }),
+      login: async (email, password, remember) => {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) return { ok: false, error: error.message };
+        set({
+          isAuthed: true,
+          username: data.user?.email ?? email,
+          rememberedUser: remember ? email : null,
+        });
+        return { ok: true };
+      },
+      signup: async (email, password) => {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: window.location.origin },
+        });
+        if (error) return { ok: false, error: error.message };
+        return { ok: true };
+      },
+      logout: async () => {
+        await supabase.auth.signOut();
+        set({ isAuthed: false, username: null });
+      },
     }),
-    { name: "edvora-auth-v1" },
+    {
+      name: "edvora-auth-v1",
+      partialize: (s) => ({ rememberedUser: s.rememberedUser }) as any,
+    },
   ),
 );

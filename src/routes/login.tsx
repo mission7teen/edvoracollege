@@ -1,13 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Lock, ShieldCheck, User } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/store";
+import { lovable } from "@/integrations/lovable/index";
 import shieldLogo from "@/assets/images/shield_logo_1782228638116.jpg";
 
 export const Route = createFileRoute("/login")({
@@ -17,12 +18,17 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
-  const { login, isAuthed, rememberedUser } = useAuth();
-  const [username, setUsername] = useState(rememberedUser ?? "");
+  const { login, signup, isAuthed, rememberedUser, init } = useAuth();
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [email, setEmail] = useState(rememberedUser ?? "");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(!!rememberedUser);
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    init();
+  }, [init]);
 
   useEffect(() => {
     if (isAuthed) navigate({ to: "/dashboard" });
@@ -31,20 +37,40 @@ function LoginPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 400));
-    const res = login(username.trim(), password, remember);
+    const res =
+      mode === "signin"
+        ? await login(email.trim(), password, remember)
+        : await signup(email.trim(), password);
     setLoading(false);
     if (!res.ok) {
-      toast.error(res.error ?? "Login failed");
+      toast.error(res.error ?? "Authentication failed");
       return;
     }
-    toast.success("Welcome back, Admin");
+    if (mode === "signup") {
+      toast.success("Account created — you can sign in now.");
+      setMode("signin");
+      return;
+    }
+    toast.success("Welcome back");
+    navigate({ to: "/dashboard" });
+  }
+
+  async function onGoogle() {
+    setLoading(true);
+    const res = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin,
+    });
+    setLoading(false);
+    if (res.error) {
+      toast.error(res.error.message ?? "Google sign-in failed");
+      return;
+    }
+    if (res.redirected) return;
     navigate({ to: "/dashboard" });
   }
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2 bg-background">
-      {/* Brand panel */}
       <div className="relative hidden lg:flex flex-col justify-between p-12 overflow-hidden gradient-primary text-primary-foreground">
         <div
           className="absolute inset-0 opacity-20 pointer-events-none"
@@ -60,12 +86,7 @@ function LoginPage() {
           className="relative flex items-center gap-3"
         >
           <div className="w-11 h-11 rounded-xl overflow-hidden bg-white/15 backdrop-blur grid place-items-center">
-            <img
-              src={shieldLogo}
-              alt="EDVORA"
-              className="w-full h-full object-cover"
-              referrerPolicy="no-referrer"
-            />
+            <img src={shieldLogo} alt="EDVORA" className="w-full h-full object-cover" />
           </div>
           <div>
             <div className="font-bold tracking-tight text-lg">EDVORA COLLEGE</div>
@@ -90,29 +111,13 @@ function LoginPage() {
             A modern command center for managing students, batches and daily attendance — built for
             the EDVORA team.
           </p>
-          <div className="mt-10 grid grid-cols-3 gap-4 max-w-sm">
-            {[
-              { k: "Students", v: "1,240+" },
-              { k: "Batches", v: "32" },
-              { k: "Uptime", v: "99.9%" },
-            ].map((s) => (
-              <div
-                key={s.k}
-                className="rounded-xl bg-white/10 backdrop-blur p-3 border border-white/15"
-              >
-                <div className="text-xl font-bold">{s.v}</div>
-                <div className="text-[11px] uppercase tracking-wider text-white/70">{s.k}</div>
-              </div>
-            ))}
-          </div>
         </motion.div>
 
         <div className="relative text-xs text-white/70 flex items-center gap-2">
-          <ShieldCheck size={14} /> Secured admin access · Session managed
+          <ShieldCheck size={14} /> Secured staff access · Sessions managed by Lovable Cloud
         </div>
       </div>
 
-      {/* Form */}
       <div className="flex items-center justify-center p-6 sm:p-10">
         <motion.form
           onSubmit={onSubmit}
@@ -122,12 +127,7 @@ function LoginPage() {
         >
           <div className="lg:hidden flex items-center gap-3 mb-6">
             <div className="w-11 h-11 rounded-xl overflow-hidden grid place-items-center">
-              <img
-                src={shieldLogo}
-                alt="EDVORA"
-                className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
-              />
+              <img src={shieldLogo} alt="EDVORA" className="w-full h-full object-cover" />
             </div>
             <div>
               <div className="font-bold tracking-tight">EDVORA COLLEGE</div>
@@ -136,27 +136,33 @@ function LoginPage() {
               </div>
             </div>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">Sign in to your dashboard</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {mode === "signin" ? "Sign in to your dashboard" : "Create a staff account"}
+          </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Enter your administrator credentials to continue.
+            {mode === "signin"
+              ? "Use your staff credentials or Google account."
+              : "Sign up with your work email to access the dashboard."}
           </p>
 
           <div className="mt-6 space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="email">Email</Label>
               <div className="relative">
-                <User
+                <Mail
                   size={16}
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                 />
                 <Input
-                  id="username"
+                  id="email"
+                  type="email"
                   autoFocus
-                  autoComplete="username"
+                  autoComplete="email"
                   className="pl-9 h-11"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Edvora"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@edvoracollege.com"
+                  required
                 />
               </div>
             </div>
@@ -170,11 +176,13 @@ function LoginPage() {
                 <Input
                   id="password"
                   type={showPw ? "text" : "password"}
-                  autoComplete="current-password"
+                  autoComplete={mode === "signin" ? "current-password" : "new-password"}
                   className="pl-9 pr-10 h-11"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
+                  minLength={6}
+                  required
                 />
                 <button
                   type="button"
@@ -186,32 +194,70 @@ function LoginPage() {
                 </button>
               </div>
             </div>
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 text-sm text-muted-foreground select-none">
-                <Checkbox checked={remember} onCheckedChange={(v) => setRemember(!!v)} /> Remember
-                me
-              </label>
-              <button
-                type="button"
-                className="text-sm text-primary hover:underline"
-                onClick={() => toast.info("Contact your administrator")}
-              >
-                Forgot password?
-              </button>
-            </div>
+            {mode === "signin" && (
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 text-sm text-muted-foreground select-none">
+                  <Checkbox checked={remember} onCheckedChange={(v) => setRemember(!!v)} />
+                  Remember me
+                </label>
+              </div>
+            )}
             <Button
               type="submit"
               disabled={loading}
               className="w-full h-11 gradient-primary text-primary-foreground hover:opacity-95 shadow-elegant"
             >
-              {loading ? "Signing in…" : "Sign in"}
+              {loading
+                ? "Please wait…"
+                : mode === "signin"
+                  ? "Sign in"
+                  : "Create account"}
             </Button>
-          </div>
 
-          <div className="mt-6 text-[11px] text-muted-foreground text-center border-t border-border pt-4">
-            Demo credentials —{" "}
-            <span className="font-mono font-semibold text-foreground">Edvora</span> /{" "}
-            <span className="font-mono font-semibold text-foreground">Edvora@1234</span>
+            <div className="relative my-2">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-[11px] uppercase tracking-wider">
+                <span className="bg-card px-2 text-muted-foreground">or</span>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              disabled={loading}
+              onClick={onGoogle}
+              className="w-full h-11"
+            >
+              Continue with Google
+            </Button>
+
+            <div className="text-center text-sm text-muted-foreground">
+              {mode === "signin" ? (
+                <>
+                  Need an account?{" "}
+                  <button
+                    type="button"
+                    onClick={() => setMode("signup")}
+                    className="text-primary hover:underline"
+                  >
+                    Sign up
+                  </button>
+                </>
+              ) : (
+                <>
+                  Already have an account?{" "}
+                  <button
+                    type="button"
+                    onClick={() => setMode("signin")}
+                    className="text-primary hover:underline"
+                  >
+                    Sign in
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </motion.form>
       </div>
