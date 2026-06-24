@@ -13,7 +13,7 @@ interface QRScannerProps {
 }
 
 export function QRScanner({ roster, onStudentScanned, scannedIds, onClose }: QRScannerProps) {
-  const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
+  const [cameras, setCameras] = useState<import("html5-qrcode").CameraDevice[]>([]);
   const [selectedCameraId, setSelectedCameraId] = useState<string>("");
   const [isScanning, setIsScanning] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
