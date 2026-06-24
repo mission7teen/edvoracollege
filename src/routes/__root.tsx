@@ -110,6 +110,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a7b26f5d-a587-4235-9258-d28350ee4d55/id-preview-44898da3--b3ab989c-d2bf-4929-952f-41e40e1b4dbb.lovable.app-1780759671412.png",
       },
+      { name: "description", content: "We transform classroom learning into real-world knowledge, skills, and success. professional careers in accounting, finance, and business. Business Studies, ..." },
+      { property: "og:description", content: "We transform classroom learning into real-world knowledge, skills, and success. professional careers in accounting, finance, and business. Business Studies, ..." },
+      { name: "twitter:description", content: "We transform classroom learning into real-world knowledge, skills, and success. professional careers in accounting, finance, and business. Business Studies, ..." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/20dc2e33-1872-4938-9e66-4f237fdff157/id-preview-70894985--8616fed7-6ddf-4191-aaff-e09e16684476.lovable.app-1782286003119.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/20dc2e33-1872-4938-9e66-4f237fdff157/id-preview-70894985--8616fed7-6ddf-4191-aaff-e09e16684476.lovable.app-1782286003119.png" },
     ],
     links: [
       {
