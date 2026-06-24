@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
 const GATEWAY = "https://connector-gateway.lovable.dev/google_sheets/v4";
@@ -177,6 +178,7 @@ function buildSubjectTabValues(opts: {
 type SheetProp = { properties: { title: string; sheetId: number } };
 
 export const saveAttendanceToSheets = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => InputSchema.parse(d))
   .handler(async ({ data }) => {
     const [yStr, mStr] = data.month.split("-");
