@@ -143,8 +143,9 @@ const rowToAtt = (r: any): AttendanceRecord => ({
 });
 
 // Fire-and-forget helpers (log on failure but don't throw)
-const fnf = (p: Promise<any>) => {
-  p.then((r) => { if (r?.error) console.error("[supabase]", r.error); })
+const fnf = (p: PromiseLike<any>) => {
+  Promise.resolve(p)
+    .then((r) => { if (r?.error) console.error("[supabase]", r.error); })
     .catch((e) => console.error("[supabase]", e));
 };
 
