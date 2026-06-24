@@ -27,7 +27,7 @@ export const Route = createFileRoute("/_authenticated/attendance")({ component: 
 const statusConfig: {
   value: AttendanceStatus;
   label: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string; size?: number }>;
   cls: string;
 }[] = [
   { value: "Present", label: "Present", icon: Check, cls: "bg-success text-success-foreground" },
