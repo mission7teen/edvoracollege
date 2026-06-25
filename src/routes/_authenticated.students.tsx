@@ -11,6 +11,8 @@ import {
   Download,
   QrCode as QrIcon,
   FileSpreadsheet,
+  Nfc,
+  Copy,
 } from "lucide-react";
 import QRCode from "qrcode";
 import { AppShell } from "@/components/AppShell";
@@ -128,7 +130,11 @@ function StudentsPage() {
 
   const downloadQR = async (s: Student) => {
     try {
-      const dataUrl = await QRCode.toDataURL(s.studentId, {
+      const url =
+        typeof window !== "undefined"
+          ? `${window.location.origin}/checkin/${s.studentId}`
+          : `/checkin/${s.studentId}`;
+      const dataUrl = await QRCode.toDataURL(url, {
         width: 600,
         margin: 2,
         color: {
@@ -146,6 +152,19 @@ function StudentsPage() {
     } catch (err) {
       console.error(err);
       toast.error("Failed to generate QR code download");
+    }
+  };
+
+  const copyNfcLink = async (s: Student) => {
+    const url =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/checkin/${s.studentId}`
+        : `/checkin/${s.studentId}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("NFC link copied — write it to the student's NFC tag");
+    } catch {
+      toast.error("Copy failed");
     }
   };
 
