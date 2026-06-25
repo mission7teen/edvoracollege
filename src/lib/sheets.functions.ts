@@ -226,7 +226,39 @@ export const saveAttendanceToSheets = createServerFn({ method: "POST" })
         });
       }
     } else {
-      const meta = await gw(`/spreadsheets/${spreadsheetId}?fields=sheets.properties`);
+      let meta: any;
+      try {
+        meta = await gw(`/spreadsheets/${spreadsheetId}?fields=sheets.properties`);
+      } catch (e: any) {
+        if (String(e?.message || "").startsWith("Sheets API 404")) {
+          // Stored spreadsheet no longer accessible (different account or deleted). Recreate.
+          spreadsheetId = null;
+          const title = sanitizeTab(`EC - ${mShort} ${year} - ${data.batchName}`);
+          const created = await gw(`/spreadsheets`, {
+            method: "POST",
+            body: JSON.stringify({
+              properties: { title },
+              sheets: [
+                { properties: { title: subjectTab, gridProperties: { rowCount: 50, columnCount: presentColNum } } },
+                { properties: { title: KEY_TAB, gridProperties: { rowCount: 20, columnCount: 5 } } },
+              ],
+            }),
+          });
+          spreadsheetId = created.spreadsheetId as string;
+          sheets = (created.sheets || []) as SheetProp[];
+          needsSubjectInit = true;
+          const keySheetId = sheets.find((s) => s.properties.title === KEY_TAB)?.properties.sheetId;
+          if (keySheetId !== undefined) {
+            await gw(`/spreadsheets/${spreadsheetId}:batchUpdate`, {
+              method: "POST",
+              body: JSON.stringify({ requests: buildKeyTabRequests(keySheetId) }),
+            });
+          }
+        } else {
+          throw e;
+        }
+      }
+      if (meta) {
       sheets = (meta.sheets || []) as SheetProp[];
       // Ensure key tab exists
       if (!sheets.find((s) => s.properties.title === KEY_TAB)) {
@@ -252,6 +284,7 @@ export const saveAttendanceToSheets = createServerFn({ method: "POST" })
         const newId = r.replies?.[0]?.addSheet?.properties?.sheetId as number | undefined;
         if (newId !== undefined) sheets.push({ properties: { title: subjectTab, sheetId: newId } });
         needsSubjectInit = true;
+      }
       }
     }
 
