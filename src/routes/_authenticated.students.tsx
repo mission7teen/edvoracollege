@@ -577,20 +577,37 @@ function StudentsPage() {
               {/* Profile QR Card Block */}
               <div className="md:col-span-4 border border-border/80 rounded-2xl p-4 bg-secondary/15 flex flex-col items-center justify-center text-center gap-2">
                 <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-muted-foreground">
-                  Digital ID QR
+                  Digital ID · NFC Link QR
                 </span>
-                <QuickQR text={viewing.studentId} size={130} />
+                <QuickQR
+                  text={
+                    typeof window !== "undefined"
+                      ? `${window.location.origin}/checkin/${viewing.studentId}`
+                      : `/checkin/${viewing.studentId}`
+                  }
+                  size={130}
+                />
                 <span className="text-[11px] font-mono text-muted-foreground break-all">
                   {viewing.studentId}
                 </span>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="w-full text-[10px] h-7 bg-card text-muted-foreground hover:text-foreground mt-2"
-                  onClick={() => downloadQR(viewing)}
-                >
-                  <Download size={12} className="mr-1" /> Download QR
-                </Button>
+                <div className="w-full grid grid-cols-2 gap-1.5 mt-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-[10px] h-7"
+                    onClick={() => downloadQR(viewing)}
+                  >
+                    <Download size={12} className="mr-1" /> QR
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-[10px] h-7"
+                    onClick={() => copyNfcLink(viewing)}
+                  >
+                    <Nfc size={12} className="mr-1" /> NFC link
+                  </Button>
+                </div>
               </div>
             </div>
           )}
