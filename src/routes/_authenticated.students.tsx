@@ -11,6 +11,8 @@ import {
   Download,
   QrCode as QrIcon,
   FileSpreadsheet,
+  Nfc,
+  Copy,
 } from "lucide-react";
 import QRCode from "qrcode";
 import { AppShell } from "@/components/AppShell";
@@ -128,7 +130,11 @@ function StudentsPage() {
 
   const downloadQR = async (s: Student) => {
     try {
-      const dataUrl = await QRCode.toDataURL(s.studentId, {
+      const url =
+        typeof window !== "undefined"
+          ? `${window.location.origin}/checkin/${s.studentId}`
+          : `/checkin/${s.studentId}`;
+      const dataUrl = await QRCode.toDataURL(url, {
         width: 600,
         margin: 2,
         color: {
@@ -146,6 +152,19 @@ function StudentsPage() {
     } catch (err) {
       console.error(err);
       toast.error("Failed to generate QR code download");
+    }
+  };
+
+  const copyNfcLink = async (s: Student) => {
+    const url =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/checkin/${s.studentId}`
+        : `/checkin/${s.studentId}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("NFC link copied — write it to the student's NFC tag");
+    } catch {
+      toast.error("Copy failed");
     }
   };
 
@@ -558,20 +577,37 @@ function StudentsPage() {
               {/* Profile QR Card Block */}
               <div className="md:col-span-4 border border-border/80 rounded-2xl p-4 bg-secondary/15 flex flex-col items-center justify-center text-center gap-2">
                 <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-muted-foreground">
-                  Digital ID QR
+                  Digital ID · NFC Link QR
                 </span>
-                <QuickQR text={viewing.studentId} size={130} />
+                <QuickQR
+                  text={
+                    typeof window !== "undefined"
+                      ? `${window.location.origin}/checkin/${viewing.studentId}`
+                      : `/checkin/${viewing.studentId}`
+                  }
+                  size={130}
+                />
                 <span className="text-[11px] font-mono text-muted-foreground break-all">
                   {viewing.studentId}
                 </span>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="w-full text-[10px] h-7 bg-card text-muted-foreground hover:text-foreground mt-2"
-                  onClick={() => downloadQR(viewing)}
-                >
-                  <Download size={12} className="mr-1" /> Download QR
-                </Button>
+                <div className="w-full grid grid-cols-2 gap-1.5 mt-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-[10px] h-7"
+                    onClick={() => downloadQR(viewing)}
+                  >
+                    <Download size={12} className="mr-1" /> QR
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-[10px] h-7"
+                    onClick={() => copyNfcLink(viewing)}
+                  >
+                    <Nfc size={12} className="mr-1" /> NFC link
+                  </Button>
+                </div>
               </div>
             </div>
           )}
@@ -611,23 +647,36 @@ function StudentsPage() {
                 </div>
 
                 <div className="py-1">
-                  <QuickQR text={viewingQR.studentId} size={140} />
+                  <QuickQR
+                    text={
+                      typeof window !== "undefined"
+                        ? `${window.location.origin}/checkin/${viewingQR.studentId}`
+                        : `/checkin/${viewingQR.studentId}`
+                    }
+                    size={140}
+                  />
                 </div>
 
                 <div className="text-[9px] text-muted-foreground font-mono leading-none">
-                  SCAN FROM ATTENDANCE PAGE TO CHECK-IN
+                  SCAN OR NFC-TAP TO CHECK-IN
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2">
+                <div className="text-[10px] font-mono text-muted-foreground break-all bg-secondary/40 rounded-md px-2 py-1.5 border border-border">
+                  {typeof window !== "undefined"
+                    ? `${window.location.origin}/checkin/${viewingQR.studentId}`
+                    : `/checkin/${viewingQR.studentId}`}
+                </div>
+                <div className="flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   className="flex-1 text-xs"
-                  onClick={() => setViewingQR(null)}
+                  onClick={() => copyNfcLink(viewingQR)}
                 >
-                  Close
+                  <Copy size={13} className="mr-1.5" /> Copy NFC link
                 </Button>
                 <Button
                   size="sm"
@@ -635,6 +684,15 @@ function StudentsPage() {
                   onClick={() => downloadQR(viewingQR)}
                 >
                   <Download size={13} className="mr-1.5" /> Download QR
+                </Button>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => setViewingQR(null)}
+                >
+                  Close
                 </Button>
               </div>
             </div>

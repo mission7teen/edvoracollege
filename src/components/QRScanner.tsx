@@ -89,7 +89,10 @@ export function QRScanner({ roster, onStudentScanned, scannedIds, onClose }: QRS
 
     // Fast robust matching in batch roster
     // Can match: database UUID/id, studentId (e.g. EDV2024001), or prefixes like `edvora_stu:`
-    const cleanValue = trimmed.replace(/^edvora_stu:/i, "");
+    let cleanValue = trimmed.replace(/^edvora_stu:/i, "");
+    // If scanned content is an NFC/check-in URL (…/checkin/EDV-0001), extract the ID.
+    const checkinMatch = cleanValue.match(/\/checkin\/([A-Za-z0-9_\-]+)/i);
+    if (checkinMatch) cleanValue = checkinMatch[1];
     const matchingStudent = roster.find(
       (s) =>
         s.id === cleanValue ||

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Check, ClipboardCheck, Save, X, Sheet as SheetIcon, QrCode } from "lucide-react";
+import { Check, ClipboardCheck, Save, X, Sheet as SheetIcon, QrCode, Nfc } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { saveAttendanceToSheets } from "@/lib/sheets.functions";
 import { AppShell } from "@/components/AppShell";
@@ -52,6 +52,8 @@ function AttendancePage() {
   const [savingSheet, setSavingSheet] = useState(false);
   const [qrActive, setQrActive] = useState(false);
   const [scannedIds, setScannedIds] = useState<Set<string>>(new Set());
+  const [nfcActive, setNfcActive] = useState(false);
+  const nfcAbortRef = useRef<AbortController | null>(null);
   const saveToSheetsFn = useServerFn(saveAttendanceToSheets);
 
   const courseBatches = batches;
@@ -91,6 +93,83 @@ function AttendancePage() {
       ...prev,
       [id]: "Present",
     }));
+  };
+
+  const extractStudentIdFromText = (raw: string): string | null => {
+    const t = raw.trim();
+    if (!t) return null;
+    const m = t.match(/\/checkin\/([A-Za-z0-9_\-]+)/i);
+    if (m) return m[1];
+    return t.replace(/^edvora_stu:/i, "");
+  };
+
+  const stopNfc = () => {
+    nfcAbortRef.current?.abort();
+    nfcAbortRef.current = null;
+    setNfcActive(false);
+  };
+
+  const startNfcSession = async () => {
+    if (!batchId) return toast.error("Please select a batch first!");
+    const NDEFReaderCtor = (globalThis as any).NDEFReader as
+      | { new (): { scan: (opts?: { signal?: AbortSignal }) => Promise<void>; onreading: any; onreadingerror: any } }
+      | undefined;
+    if (!NDEFReaderCtor) {
+      return toast.error("Web NFC is not supported on this device. Use Chrome on Android.");
+    }
+    try {
+      const reader = new NDEFReaderCtor();
+      const ctrl = new AbortController();
+      nfcAbortRef.current = ctrl;
+      await reader.scan({ signal: ctrl.signal });
+
+      // Default everyone Absent on session start
+      const initial: Record<string, AttendanceStatus> = {};
+      roster.forEach((s) => (initial[s.id] = "Absent"));
+      setMarks((prev) => ({ ...prev, ...initial }));
+      setScannedIds(new Set());
+      setNfcActive(true);
+      toast.info("NFC tap session active — tap student NFC tags to mark Present.", {
+        duration: 5000,
+      });
+
+      reader.onreadingerror = () => toast.error("Couldn't read NFC tag — try again.");
+      reader.onreading = (event: any) => {
+        try {
+          let candidate: string | null = null;
+          for (const rec of event.message?.records ?? []) {
+            if (rec.recordType === "url" || rec.recordType === "absolute-url") {
+              const dec = new TextDecoder();
+              candidate = dec.decode(rec.data);
+            } else if (rec.recordType === "text") {
+              const lang = rec.encoding || "utf-8";
+              candidate = new TextDecoder(lang).decode(rec.data);
+            }
+            if (candidate) break;
+          }
+          if (!candidate && event.serialNumber) candidate = event.serialNumber;
+          if (!candidate) return;
+          const sid = extractStudentIdFromText(candidate);
+          if (!sid) return;
+          const match = roster.find((s) => s.studentId === sid || s.id === sid);
+          if (!match) {
+            toast.warning(`Tag "${sid}" is not in this batch roster.`);
+            return;
+          }
+          if (scannedIds.has(match.id)) return;
+          handleStudentScanned(match.id);
+          if (navigator.vibrate) navigator.vibrate(80);
+          toast.success(`Present: ${match.fullName}`);
+        } catch (err) {
+          console.error(err);
+        }
+      };
+    } catch (e: any) {
+      nfcAbortRef.current = null;
+      setNfcActive(false);
+      const msg = e?.message || "Failed to start NFC reader";
+      toast.error(`NFC: ${msg}`);
+    }
   };
 
   const startQrSession = () => {
@@ -270,6 +349,17 @@ function AttendancePage() {
             )}
           >
             <QrCode size={15} /> {qrActive ? "Scanning active" : "Scan QR Codes"}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={nfcActive ? stopNfc : startNfcSession}
+            disabled={!roster.length}
+            className={cn(
+              "w-full sm:w-auto border-dashed hover:border-primary/50 transition-colors",
+              nfcActive ? "bg-primary/10 border-primary text-primary" : "",
+            )}
+          >
+            <Nfc size={15} /> {nfcActive ? "Tap session active" : "Tap to Mark (NFC)"}
           </Button>
           <Button
             variant="outline"
