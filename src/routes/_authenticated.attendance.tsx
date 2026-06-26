@@ -422,6 +422,15 @@ function AttendancePage() {
           >
             <Save size={15} /> Save
           </Button>
+          <label className="w-full sm:w-auto flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-xs cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={notifyParents}
+              onChange={(e) => setNotifyParents(e.target.checked)}
+              className="h-3.5 w-3.5 accent-primary"
+            />
+            Notify parents on WhatsApp
+          </label>
           <Button
             onClick={saveToSheets}
             disabled={!roster.length || savingSheet}
