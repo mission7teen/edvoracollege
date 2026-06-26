@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Check, ClipboardCheck, Save, X, Sheet as SheetIcon, QrCode, Nfc } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { saveAttendanceToSheets } from "@/lib/sheets.functions";
+import { sendAttendanceWhatsApp } from "@/lib/whatsapp.functions";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { QRScanner } from "@/components/QRScanner";
@@ -55,6 +56,7 @@ function AttendancePage() {
   const [nfcActive, setNfcActive] = useState(false);
   const nfcAbortRef = useRef<AbortController | null>(null);
   const saveToSheetsFn = useServerFn(saveAttendanceToSheets);
+  const sendWhatsAppFn = useServerFn(sendAttendanceWhatsApp);
 
   const courseBatches = batches;
   const subjectTeachers = useMemo(
@@ -206,6 +208,32 @@ function AttendancePage() {
     saveAttendance(date, batchId, courseId, final, undefined, teacherId);
     setMarks({});
     toast.success(`Attendance saved for ${roster.length} students`);
+    // Fire WhatsApp notifications to guardians (non-blocking)
+    const subject = courses.find((c) => c.id === courseId);
+    const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const recipients = roster
+      .filter((s) => !!s.guardianPhone)
+      .map((s) => ({
+        guardianPhone: s.guardianPhone,
+        studentName: s.fullName,
+        status: final[s.id],
+        subjectName: subject?.name ?? "",
+        date,
+        time,
+      }));
+    if (recipients.length) {
+      toast.info(`Sending WhatsApp to ${recipients.length} parents…`);
+      sendWhatsAppFn({ data: { recipients } })
+        .then((res) => {
+          if (res.failures?.length) {
+            toast.warning(`WhatsApp: ${res.sent} sent, ${res.failures.length} failed, ${res.skipped} skipped`);
+            console.warn("WAAPI failures", res.failures);
+          } else {
+            toast.success(`WhatsApp sent to ${res.sent} parents (${res.skipped} skipped)`);
+          }
+        })
+        .catch((e) => toast.error(`WhatsApp failed: ${(e as Error).message}`));
+    }
   }
 
   async function saveToSheets() {
