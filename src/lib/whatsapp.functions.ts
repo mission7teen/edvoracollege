@@ -57,8 +57,8 @@ export const sendAttendanceWhatsApp = createServerFn({ method: "POST" })
       const greet = r.guardianName ? `Dear ${r.guardianName},` : "Dear Parent,";
       const line =
         r.status === "Present"
-          ? `Your child *${r.studentName}* (${r.studentCode}) was marked *PRESENT* for ${r.subjectName} on ${data.date}.`
-          : `Your child *${r.studentName}* (${r.studentCode}) was marked *ABSENT* for ${r.subjectName} on ${data.date}. Please contact the college if this is unexpected.`;
+          ? `Your child *${r.studentName}* (${r.studentCode}) was marked *PRESENT* for ${data.subjectName} on ${data.date}.`
+          : `Your child *${r.studentName}* (${r.studentCode}) was marked *ABSENT* for ${data.subjectName} on ${data.date}. Please contact the college if this is unexpected.`;
       const message = `${greet}\n\n${line}\n\nBatch: ${data.batchName}\n\n— ${college}`;
 
       try {
