@@ -57,7 +57,8 @@ export const Route = createFileRoute("/_authenticated/students")({
   component: StudentsPage,
 });
 
-const empty: Omit<Student, "id" | "studentId" | "registrationDate"> = {
+const empty: Omit<Student, "id" | "registrationDate"> = {
+  studentId: "",
   fullName: "",
   photoUrl: "",
   gender: "Male",
@@ -170,14 +171,18 @@ function StudentsPage() {
 
   const filtered = useMemo(
     () =>
-      students.filter((s) => {
+      students
+        .filter((s) => {
         const ql = q.toLowerCase();
         if (ql && !`${s.fullName} ${s.studentId} ${s.email} ${s.phone}`.toLowerCase().includes(ql))
           return false;
         if (batch !== "all" && s.batchId !== batch) return false;
         if (status !== "all" && s.status !== status) return false;
         return true;
-      }),
+        })
+        .sort((a, b) =>
+          a.studentId.localeCompare(b.studentId, undefined, { numeric: true, sensitivity: "base" }),
+        ),
     [students, q, batch, status],
   );
 
@@ -196,16 +201,25 @@ function StudentsPage() {
   }
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.fullName || !form.batchId) {
-      toast.error("Name and batch are required");
+    if (!form.fullName || !form.batchId || !form.studentId.trim()) {
+      toast.error("Student ID, name and batch are required");
+      return;
+    }
+    const sid = form.studentId.trim();
+    const dup = students.find(
+      (s) => s.studentId.toLowerCase() === sid.toLowerCase() && s.id !== editing?.id,
+    );
+    if (dup) {
+      toast.error("Student ID already exists");
       return;
     }
     if (editing) {
-      updateStudent(editing.id, form);
+      updateStudent(editing.id, { ...form, studentId: sid });
       toast.success("Student updated");
     } else {
       addStudent({
         ...form,
+        studentId: sid,
         photoUrl:
           form.photoUrl ||
           `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(form.fullName)}`,
@@ -313,6 +327,13 @@ function StudentsPage() {
               <DialogTitle>{editing ? "Edit student" : "Add new student"}</DialogTitle>
             </DialogHeader>
             <form onSubmit={submit} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Field label="Student ID *">
+                <Input
+                  value={form.studentId}
+                  onChange={(e) => setForm({ ...form, studentId: e.target.value })}
+                  placeholder="e.g. EDV-0001"
+                />
+              </Field>
               <Field label="Full name *">
                 <Input
                   value={form.fullName}
