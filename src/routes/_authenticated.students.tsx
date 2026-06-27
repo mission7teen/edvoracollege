@@ -197,16 +197,25 @@ function StudentsPage() {
   }
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.fullName || !form.batchId) {
-      toast.error("Name and batch are required");
+    if (!form.fullName || !form.batchId || !form.studentId.trim()) {
+      toast.error("Student ID, name and batch are required");
+      return;
+    }
+    const sid = form.studentId.trim();
+    const dup = students.find(
+      (s) => s.studentId.toLowerCase() === sid.toLowerCase() && s.id !== editing?.id,
+    );
+    if (dup) {
+      toast.error("Student ID already exists");
       return;
     }
     if (editing) {
-      updateStudent(editing.id, form);
+      updateStudent(editing.id, { ...form, studentId: sid });
       toast.success("Student updated");
     } else {
       addStudent({
         ...form,
+        studentId: sid,
         photoUrl:
           form.photoUrl ||
           `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(form.fullName)}`,
