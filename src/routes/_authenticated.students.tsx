@@ -323,6 +323,13 @@ function StudentsPage() {
               <DialogTitle>{editing ? "Edit student" : "Add new student"}</DialogTitle>
             </DialogHeader>
             <form onSubmit={submit} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Field label="Student ID *">
+                <Input
+                  value={form.studentId}
+                  onChange={(e) => setForm({ ...form, studentId: e.target.value })}
+                  placeholder="e.g. EDV-0001"
+                />
+              </Field>
               <Field label="Full name *">
                 <Input
                   value={form.fullName}
