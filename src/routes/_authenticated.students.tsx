@@ -57,7 +57,8 @@ export const Route = createFileRoute("/_authenticated/students")({
   component: StudentsPage,
 });
 
-const empty: Omit<Student, "id" | "studentId" | "registrationDate"> = {
+const empty: Omit<Student, "id" | "registrationDate"> = {
+  studentId: "",
   fullName: "",
   photoUrl: "",
   gender: "Male",
