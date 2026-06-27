@@ -171,14 +171,18 @@ function StudentsPage() {
 
   const filtered = useMemo(
     () =>
-      students.filter((s) => {
+      students
+        .filter((s) => {
         const ql = q.toLowerCase();
         if (ql && !`${s.fullName} ${s.studentId} ${s.email} ${s.phone}`.toLowerCase().includes(ql))
           return false;
         if (batch !== "all" && s.batchId !== batch) return false;
         if (status !== "all" && s.status !== status) return false;
         return true;
-      }),
+        })
+        .sort((a, b) =>
+          a.studentId.localeCompare(b.studentId, undefined, { numeric: true, sensitivity: "base" }),
+        ),
     [students, q, batch, status],
   );
 
