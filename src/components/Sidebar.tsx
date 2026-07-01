@@ -11,6 +11,8 @@ import {
   TrendingUp,
   Settings,
   LogOut,
+  Award,
+  Wallet,
 } from "lucide-react";
 import { Logo } from "./Logo";
 import { useAuth } from "@/lib/store";
@@ -25,6 +27,8 @@ const items = [
   { to: "/subjects", label: "Subjects", icon: BookOpen },
   { to: "/attendance", label: "Mark Attendance", icon: ClipboardCheck },
   { to: "/history", label: "Attendance History", icon: History },
+  { to: "/exams", label: "Exam Marks", icon: Award },
+  { to: "/payments", label: "Payments", icon: Wallet },
   { to: "/reports", label: "Reports", icon: FileBarChart },
   { to: "/analytics", label: "Analytics", icon: TrendingUp },
   { to: "/settings", label: "Settings", icon: Settings },
