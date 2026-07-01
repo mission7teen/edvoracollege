@@ -70,7 +70,15 @@ function AttendancePage() {
     [teachers, courseId],
   );
   const roster = useMemo(
-    () => students.filter((s) => s.batchId === batchId && s.status === "Active"),
+    () =>
+      students
+        .filter((s) => s.batchId === batchId && s.status === "Active")
+        .sort((a, b) =>
+          a.studentId.localeCompare(b.studentId, undefined, {
+            numeric: true,
+            sensitivity: "base",
+          }),
+        ),
     [students, batchId],
   );
 
