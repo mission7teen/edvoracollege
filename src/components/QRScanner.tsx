@@ -76,8 +76,14 @@ export function QRScanner({ roster, onStudentScanned, scannedIds, onClose }: QRS
 
     return () => {
       // Clean up scanning on unmount
-      if (scannerRef.current && scannerRef.current.isScanning) {
-        scannerRef.current.stop().catch((e) => console.warn("Error cleaning up scanner:", e));
+      try {
+        if (scannerRef.current && scannerRef.current.isScanning) {
+          scannerRef.current
+            .stop()
+            .catch((e) => console.warn("Error cleaning up scanner:", e));
+        }
+      } catch (e) {
+        console.warn("Error cleaning up scanner (sync):", e);
       }
     };
   }, []);
@@ -176,8 +182,12 @@ export function QRScanner({ roster, onStudentScanned, scannedIds, onClose }: QRS
 
     return () => {
       // Safe cleanup when camera ID or component states change
-      if (scannerRef.current?.isScanning) {
-        scannerRef.current.stop().catch((e) => console.warn("Error stopping scanner:", e));
+      try {
+        if (scannerRef.current?.isScanning) {
+          scannerRef.current.stop().catch((e) => console.warn("Error stopping scanner:", e));
+        }
+      } catch (e) {
+        console.warn("Error stopping scanner (sync):", e);
       }
     };
   }, [selectedCameraId]);
