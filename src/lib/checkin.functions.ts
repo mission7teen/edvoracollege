@@ -54,6 +54,68 @@ export const getStudentPortfolio = createServerFn({ method: "GET" })
     const present = records.filter((r) => r.status === "Present").length;
     const total = records.length;
 
+    // Exam marks (with subject + exam name)
+    const { data: marksRows } = await supabaseAdmin
+      .from("exam_marks")
+      .select("id, marks, grade, exam_id")
+      .eq("student_id", student.id);
+    const examIds = Array.from(new Set((marksRows ?? []).map((m) => m.exam_id)));
+    let examsById: Record<string, any> = {};
+    if (examIds.length) {
+      const { data: examRows } = await supabaseAdmin
+        .from("exams")
+        .select("id, name, type, date, max_marks, subject_id")
+        .in("id", examIds);
+      for (const e of examRows ?? []) examsById[e.id] = e;
+    }
+    const subjectIds = Array.from(
+      new Set(Object.values(examsById).map((e: any) => e.subject_id).filter(Boolean)),
+    );
+    let subjectNames: Record<string, string> = {};
+    if (subjectIds.length) {
+      const { data: cs } = await supabaseAdmin
+        .from("courses")
+        .select("id, name")
+        .in("id", subjectIds as string[]);
+      for (const c of cs ?? []) subjectNames[c.id] = c.name;
+    }
+    const marks = (marksRows ?? []).map((m) => {
+      const e = examsById[m.exam_id] || {};
+      return {
+        id: m.id,
+        examName: e.name || "",
+        examType: e.type || "",
+        date: e.date || "",
+        subject: e.subject_id ? subjectNames[e.subject_id] || "" : "",
+        marks: Number(m.marks) || 0,
+        maxMarks: Number(e.max_marks) || 100,
+        grade: m.grade || "",
+      };
+    }).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+
+    // Payments
+    const { data: paysRows } = await supabaseAdmin
+      .from("student_payments")
+      .select("id, month, amount, paid_on, package_id")
+      .eq("student_id", student.id)
+      .order("month", { ascending: false });
+    const pkgIds = Array.from(new Set((paysRows ?? []).map((p) => p.package_id).filter(Boolean)));
+    let pkgNames: Record<string, string> = {};
+    if (pkgIds.length) {
+      const { data: pkgs } = await supabaseAdmin
+        .from("payment_packages")
+        .select("id, name")
+        .in("id", pkgIds as string[]);
+      for (const p of pkgs ?? []) pkgNames[p.id] = p.name;
+    }
+    const payments = (paysRows ?? []).map((p) => ({
+      id: p.id,
+      month: p.month,
+      amount: Number(p.amount) || 0,
+      paidOn: p.paid_on || "",
+      packageName: p.package_id ? pkgNames[p.package_id] || "" : "",
+    }));
+
     return {
       student: {
         id: student.id,
@@ -78,6 +140,8 @@ export const getStudentPortfolio = createServerFn({ method: "GET" })
         totalCount: total,
         percentage: total > 0 ? Math.round((present / total) * 100) : 0,
       },
+      marks,
+      payments,
     };
   });
 
