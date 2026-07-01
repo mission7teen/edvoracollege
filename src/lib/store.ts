@@ -8,6 +8,10 @@ import type {
   CollegeSettings,
   AttendanceStatus,
   Teacher,
+  Exam,
+  ExamMark,
+  PaymentPackage,
+  StudentPayment,
 } from "./types";
 import {
   generateAttendance,
@@ -27,6 +31,10 @@ interface DataState {
   settings: CollegeSettings;
   theme: "light" | "dark";
   subjectSheetIds: Record<string, string>;
+  exams: Exam[];
+  examMarks: ExamMark[];
+  paymentPackages: PaymentPackage[];
+  studentPayments: StudentPayment[];
   hydrated: boolean;
   hydrate: () => Promise<void>;
   addStudent: (
@@ -56,6 +64,15 @@ interface DataState {
   updateSettings: (patch: Partial<CollegeSettings>) => void;
   setTheme: (t: "light" | "dark") => void;
   setSubjectSheetId: (key: string, spreadsheetId: string) => void;
+  addExam: (e: Omit<Exam, "id">) => string;
+  updateExam: (id: string, patch: Partial<Exam>) => void;
+  deleteExam: (id: string) => void;
+  saveExamMarks: (examId: string, marks: Record<string, number>) => void;
+  addPaymentPackage: (p: Omit<PaymentPackage, "id">) => void;
+  updatePaymentPackage: (id: string, patch: Partial<PaymentPackage>) => void;
+  deletePaymentPackage: (id: string) => void;
+  addStudentPayment: (p: Omit<StudentPayment, "id">) => void;
+  deleteStudentPayment: (id: string) => void;
   reset: () => void;
 }
 
@@ -142,6 +159,49 @@ const rowToAtt = (r: any): AttendanceRecord => ({
   date: r.date, status: r.status, remarks: r.remarks || "",
 });
 
+// ============ Exam / Payment mappers ============
+const examToRow = (e: Exam) => ({
+  id: e.id, name: e.name, type: e.type, subject_id: e.subjectId || null,
+  batch_id: e.batchId || null, date: e.date || "", max_marks: e.maxMarks || 100,
+});
+const rowToExam = (r: any): Exam => ({
+  id: r.id, name: r.name, type: (r.type as any) || "Monthly",
+  subjectId: r.subject_id || "", batchId: r.batch_id || "",
+  date: r.date || "", maxMarks: Number(r.max_marks) || 100,
+});
+const markToRow = (m: ExamMark) => ({
+  id: m.id, exam_id: m.examId, student_id: m.studentId,
+  marks: m.marks, grade: m.grade,
+});
+const rowToMark = (r: any): ExamMark => ({
+  id: r.id, examId: r.exam_id, studentId: r.student_id,
+  marks: Number(r.marks) || 0, grade: r.grade || "",
+});
+const pkgToRow = (p: PaymentPackage) => ({
+  id: p.id, name: p.name, amount: p.amount, description: p.description || "",
+});
+const rowToPkg = (r: any): PaymentPackage => ({
+  id: r.id, name: r.name, amount: Number(r.amount) || 0, description: r.description || "",
+});
+const payToRow = (p: StudentPayment) => ({
+  id: p.id, student_id: p.studentId, package_id: p.packageId || null,
+  month: p.month, amount: p.amount, paid_on: p.paidOn || "",
+});
+const rowToPay = (r: any): StudentPayment => ({
+  id: r.id, studentId: r.student_id, packageId: r.package_id || undefined,
+  month: r.month, amount: Number(r.amount) || 0, paidOn: r.paid_on || "",
+});
+
+export function computeGrade(marks: number, max: number): string {
+  if (!max || max <= 0) return "";
+  const pct = (marks / max) * 100;
+  if (pct >= 75) return "A";
+  if (pct >= 65) return "B";
+  if (pct >= 55) return "C";
+  if (pct >= 35) return "S";
+  return "F";
+}
+
 // Fire-and-forget helpers (log on failure but don't throw)
 const fnf = (p: PromiseLike<any>) => {
   Promise.resolve(p)
@@ -150,7 +210,7 @@ const fnf = (p: PromiseLike<any>) => {
 };
 
 async function fetchAll() {
-  const [c, b, t, s, a, set, sh] = await Promise.all([
+  const [c, b, t, s, a, set, sh, ex, em, pp, sp] = await Promise.all([
     supabase.from("courses").select("*"),
     supabase.from("batches").select("*"),
     supabase.from("teachers").select("*"),
@@ -158,8 +218,12 @@ async function fetchAll() {
     supabase.from("attendance").select("*"),
     supabase.from("app_settings").select("*").eq("id", "default").maybeSingle(),
     supabase.from("subject_sheets").select("*"),
+    supabase.from("exams").select("*"),
+    supabase.from("exam_marks").select("*"),
+    supabase.from("payment_packages").select("*"),
+    supabase.from("student_payments").select("*"),
   ]);
-  return { c, b, t, s, a, set, sh };
+  return { c, b, t, s, a, set, sh, ex, em, pp, sp };
 }
 
 async function seedCloudIfEmpty() {
@@ -189,11 +253,15 @@ export const useData = create<DataState>()(
       settings: defaultSettings,
       theme: "light",
       subjectSheetIds: {},
+      exams: [],
+      examMarks: [],
+      paymentPackages: [],
+      studentPayments: [],
       hydrated: false,
       hydrate: async () => {
         if (get().hydrated) return;
         try {
-          let { c, b, t, s, a, set: settingsRow, sh } = await fetchAll();
+          let { c, b, t, s, a, set: settingsRow, sh, ex, em, pp, sp } = await fetchAll();
           const isEmpty =
             !c.error && !b.error && !s.error &&
             (c.data?.length ?? 0) === 0 &&
@@ -201,7 +269,7 @@ export const useData = create<DataState>()(
             (s.data?.length ?? 0) === 0;
           if (isEmpty) {
             await seedCloudIfEmpty();
-            ({ c, b, t, s, a, set: settingsRow, sh } = await fetchAll());
+            ({ c, b, t, s, a, set: settingsRow, sh, ex, em, pp, sp } = await fetchAll());
           }
           const settings = settingsRow?.data?.data
             ? { ...defaultSettings, ...(settingsRow.data.data as any) }
@@ -219,6 +287,10 @@ export const useData = create<DataState>()(
             attendance: (a.data || []).map(rowToAtt),
             settings,
             subjectSheetIds,
+            exams: (ex?.data || []).map(rowToExam),
+            examMarks: (em?.data || []).map(rowToMark),
+            paymentPackages: (pp?.data || []).map(rowToPkg),
+            studentPayments: (sp?.data || []).map(rowToPay),
             hydrated: true,
           });
         } catch (e) {
@@ -336,6 +408,71 @@ export const useData = create<DataState>()(
       setSubjectSheetId: (key, spreadsheetId) => {
         set({ subjectSheetIds: { ...get().subjectSheetIds, [key]: spreadsheetId } });
         fnf(supabase.from("subject_sheets").upsert({ key, spreadsheet_id: spreadsheetId }));
+      },
+      addExam: (e) => {
+        const exam: Exam = { ...e, id: genId("e") };
+        set({ exams: [exam, ...get().exams] });
+        fnf(supabase.from("exams").insert(examToRow(exam)));
+        return exam.id;
+      },
+      updateExam: (id, patch) => {
+        const next = get().exams.map((e) => (e.id === id ? { ...e, ...patch } : e));
+        set({ exams: next });
+        const row = next.find((e) => e.id === id);
+        if (row) fnf(supabase.from("exams").update(examToRow(row)).eq("id", id));
+      },
+      deleteExam: (id) => {
+        set({
+          exams: get().exams.filter((e) => e.id !== id),
+          examMarks: get().examMarks.filter((m) => m.examId !== id),
+        });
+        fnf(supabase.from("exam_marks").delete().eq("exam_id", id));
+        fnf(supabase.from("exams").delete().eq("id", id));
+      },
+      saveExamMarks: (examId, marks) => {
+        const exam = get().exams.find((e) => e.id === examId);
+        if (!exam) return;
+        const others = get().examMarks.filter((m) => m.examId !== examId);
+        const rows: ExamMark[] = Object.entries(marks)
+          .filter(([, v]) => v !== null && v !== undefined && !Number.isNaN(v))
+          .map(([studentId, m]) => ({
+            id: genId("em"),
+            examId,
+            studentId,
+            marks: Number(m) || 0,
+            grade: computeGrade(Number(m) || 0, exam.maxMarks),
+          }));
+        set({ examMarks: [...others, ...rows] });
+        fnf(
+          (async () => {
+            await supabase.from("exam_marks").delete().eq("exam_id", examId);
+            if (rows.length) await supabase.from("exam_marks").insert(rows.map(markToRow));
+          })(),
+        );
+      },
+      addPaymentPackage: (p) => {
+        const pkg: PaymentPackage = { ...p, id: genId("pkg") };
+        set({ paymentPackages: [pkg, ...get().paymentPackages] });
+        fnf(supabase.from("payment_packages").insert(pkgToRow(pkg)));
+      },
+      updatePaymentPackage: (id, patch) => {
+        const next = get().paymentPackages.map((p) => (p.id === id ? { ...p, ...patch } : p));
+        set({ paymentPackages: next });
+        const row = next.find((p) => p.id === id);
+        if (row) fnf(supabase.from("payment_packages").update(pkgToRow(row)).eq("id", id));
+      },
+      deletePaymentPackage: (id) => {
+        set({ paymentPackages: get().paymentPackages.filter((p) => p.id !== id) });
+        fnf(supabase.from("payment_packages").delete().eq("id", id));
+      },
+      addStudentPayment: (p) => {
+        const pay: StudentPayment = { ...p, id: genId("pay") };
+        set({ studentPayments: [pay, ...get().studentPayments] });
+        fnf(supabase.from("student_payments").insert(payToRow(pay)));
+      },
+      deleteStudentPayment: (id) => {
+        set({ studentPayments: get().studentPayments.filter((p) => p.id !== id) });
+        fnf(supabase.from("student_payments").delete().eq("id", id));
       },
       reset: async () => {
         // wipe cloud then re-seed
