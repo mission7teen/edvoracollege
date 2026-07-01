@@ -75,3 +75,39 @@ export interface Teacher {
   joinedDate: string;
   status: "Active" | "Inactive";
 }
+
+export type ExamType = "Monthly" | "Term" | "Final";
+
+export interface Exam {
+  id: string;
+  name: string;
+  type: ExamType;
+  subjectId: string; // Course.id
+  batchId: string;
+  date: string; // YYYY-MM-DD
+  maxMarks: number;
+}
+
+export interface ExamMark {
+  id: string;
+  examId: string;
+  studentId: string; // Student.id
+  marks: number;
+  grade: string;
+}
+
+export interface PaymentPackage {
+  id: string;
+  name: string;
+  amount: number;
+  description: string;
+}
+
+export interface StudentPayment {
+  id: string;
+  studentId: string; // Student.id
+  packageId?: string;
+  month: string; // YYYY-MM
+  amount: number;
+  paidOn: string; // YYYY-MM-DD
+}
