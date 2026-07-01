@@ -277,7 +277,7 @@ function AttendancePage() {
           rows,
         },
       });
-      setSubjectSheetId(sheetKey, res.spreadsheetId);
+      if (res.spreadsheetId) setSubjectSheetId(sheetKey, res.spreadsheetId);
       toast.success(`Saved ${res.rowsSaved} rows to Google Sheets`, {
         action: { label: "Open", onClick: () => window.open(res.url, "_blank") },
       });
