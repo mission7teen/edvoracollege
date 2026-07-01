@@ -134,6 +134,120 @@ export type Database = {
         }
         Relationships: []
       }
+      exam_marks: {
+        Row: {
+          created_at: string
+          exam_id: string
+          grade: string
+          id: string
+          marks: number
+          student_id: string
+        }
+        Insert: {
+          created_at?: string
+          exam_id: string
+          grade?: string
+          id: string
+          marks?: number
+          student_id: string
+        }
+        Update: {
+          created_at?: string
+          exam_id?: string
+          grade?: string
+          id?: string
+          marks?: number
+          student_id?: string
+        }
+        Relationships: []
+      }
+      exams: {
+        Row: {
+          batch_id: string | null
+          created_at: string
+          date: string
+          id: string
+          max_marks: number
+          name: string
+          subject_id: string | null
+          type: string
+        }
+        Insert: {
+          batch_id?: string | null
+          created_at?: string
+          date?: string
+          id: string
+          max_marks?: number
+          name: string
+          subject_id?: string | null
+          type?: string
+        }
+        Update: {
+          batch_id?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          max_marks?: number
+          name?: string
+          subject_id?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
+      payment_packages: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string
+          id: string
+          name: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          description?: string
+          id: string
+          name: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      student_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          month: string
+          package_id: string | null
+          paid_on: string
+          student_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          id: string
+          month: string
+          package_id?: string | null
+          paid_on?: string
+          student_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          month?: string
+          package_id?: string | null
+          paid_on?: string
+          student_id?: string
+        }
+        Relationships: []
+      }
       students: {
         Row: {
           address: string | null
