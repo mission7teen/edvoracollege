@@ -13,6 +13,8 @@ import {
   Calendar,
   BookOpen,
   Users,
+  Award,
+  Wallet,
 } from "lucide-react";
 import { markCheckinByStudentId, getStudentPortfolio } from "@/lib/checkin.functions";
 
@@ -204,6 +206,76 @@ function CheckinPage() {
                   >
                     {r.status}
                   </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-border bg-card p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Award size={16} className="text-primary" />
+            <h2 className="text-sm font-semibold text-foreground">Exam Marks</h2>
+            <span className="ml-auto text-xs text-muted-foreground">{portfolio.marks.length}</span>
+          </div>
+          {portfolio.marks.length === 0 ? (
+            <p className="text-xs text-muted-foreground">No exam marks yet.</p>
+          ) : (
+            <ul className="space-y-2 text-xs">
+              {portfolio.marks.map((m) => (
+                <li
+                  key={m.id}
+                  className="flex items-center justify-between border-b border-border/50 pb-2 last:border-0"
+                >
+                  <div className="min-w-0">
+                    <p className="font-medium text-foreground truncate">
+                      {m.examName}
+                      {m.subject ? ` · ${m.subject}` : ""}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {m.examType} {m.date ? `· ${m.date}` : ""}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0 ml-2">
+                    <p className="font-mono font-semibold text-foreground">
+                      {m.marks}/{m.maxMarks}
+                    </p>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-bold">
+                      {m.grade}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-border bg-card p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Wallet size={16} className="text-primary" />
+            <h2 className="text-sm font-semibold text-foreground">Payment History</h2>
+            <span className="ml-auto text-xs text-muted-foreground">
+              {portfolio.payments.length}
+            </span>
+          </div>
+          {portfolio.payments.length === 0 ? (
+            <p className="text-xs text-muted-foreground">No payments recorded.</p>
+          ) : (
+            <ul className="space-y-2 text-xs">
+              {portfolio.payments.map((p) => (
+                <li
+                  key={p.id}
+                  className="flex items-center justify-between border-b border-border/50 pb-2 last:border-0"
+                >
+                  <div className="min-w-0">
+                    <p className="font-medium text-foreground">{p.month}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {p.packageName || "—"} {p.paidOn ? `· Paid ${p.paidOn}` : ""}
+                    </p>
+                  </div>
+                  <p className="font-mono font-semibold text-foreground shrink-0 ml-2">
+                    Rs. {p.amount.toLocaleString()}
+                  </p>
                 </li>
               ))}
             </ul>
