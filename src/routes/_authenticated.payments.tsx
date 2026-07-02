@@ -177,25 +177,24 @@ function PaymentsTab() {
     paidOn: new Date().toISOString().slice(0, 10),
   });
 
-  const roster = useMemo(
-    () =>
+  const filteredPayments = useMemo(() => {
+    const studentIdSet = new Set(
       students
         .filter((s) => (batchFilter === "ALL" ? true : s.batchId === batchFilter))
-        .sort((a, b) => a.studentId.localeCompare(b.studentId, undefined, { numeric: true })),
-    [students, batchFilter],
-  );
+        .map((s) => s.id),
+    );
+    return payments
+      .filter((p) => (monthFilter ? p.month === monthFilter : true))
+      .filter((p) => studentIdSet.has(p.studentId))
+      .sort((a, b) => (b.paidOn || "").localeCompare(a.paidOn || ""));
+  }, [payments, students, batchFilter, monthFilter]);
 
-  const paymentsThisMonth = useMemo(
-    () => payments.filter((p) => p.month === monthFilter),
-    [payments, monthFilter],
-  );
-
-  const openForStudent = (studentId: string) => {
+  const openNew = () => {
     setForm({
-      studentId,
-      packageId: packages[0]?.id || "",
-      month: monthFilter,
-      amount: packages[0]?.amount || 0,
+      studentId: "",
+      packageId: "",
+      month: monthFilter || currentMonth(),
+      amount: 0,
       paidOn: new Date().toISOString().slice(0, 10),
     });
     setOpen(true);
@@ -217,8 +216,8 @@ function PaymentsTab() {
     setOpen(false);
   };
 
-  const paidCount = paymentsThisMonth.length;
-  const total = paymentsThisMonth.reduce((sum, p) => sum + p.amount, 0);
+  const paidCount = filteredPayments.length;
+  const total = filteredPayments.reduce((sum, p) => sum + p.amount, 0);
 
   return (
     <>
@@ -226,7 +225,7 @@ function PaymentsTab() {
         <div className="rounded-2xl border border-border bg-card p-4 flex items-center gap-3">
           <Users className="text-primary" />
           <div>
-            <p className="text-xs text-muted-foreground">Paid this month</p>
+            <p className="text-xs text-muted-foreground">Payments</p>
             <p className="text-xl font-bold">{paidCount}</p>
           </div>
         </div>
@@ -246,23 +245,28 @@ function PaymentsTab() {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 mb-4">
-        <div>
-          <Label className="text-xs">Month</Label>
-          <Input type="month" value={monthFilter} onChange={(e) => setMonthFilter(e.target.value)} />
+      <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
+        <div className="flex flex-wrap items-end gap-3">
+          <div>
+            <Label className="text-xs">Month</Label>
+            <Input type="month" value={monthFilter} onChange={(e) => setMonthFilter(e.target.value)} />
+          </div>
+          <div>
+            <Label className="text-xs">Batch</Label>
+            <Select value={batchFilter} onValueChange={setBatchFilter}>
+              <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All batches</SelectItem>
+                {batches.map((b) => (
+                  <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-        <div>
-          <Label className="text-xs">Batch</Label>
-          <Select value={batchFilter} onValueChange={setBatchFilter}>
-            <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">All batches</SelectItem>
-              {batches.map((b) => (
-                <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <Button className="gap-1 gradient-primary text-primary-foreground" onClick={openNew}>
+          <Plus size={16} /> Add Payment
+        </Button>
       </div>
 
       <div className="rounded-2xl border border-border bg-card overflow-hidden">
@@ -270,40 +274,34 @@ function PaymentsTab() {
           <TableHeader>
             <TableRow>
               <TableHead className="w-32">Student ID</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Status ({monthFilter})</TableHead>
+              <TableHead>Student</TableHead>
               <TableHead>Package</TableHead>
+              <TableHead>Month</TableHead>
               <TableHead>Amount</TableHead>
               <TableHead>Paid on</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {roster.map((s) => {
-              const pay = paymentsThisMonth.find((p) => p.studentId === s.id);
-              const pkg = pay?.packageId ? packages.find((p) => p.id === pay.packageId) : null;
-              return (
-                <TableRow key={s.id}>
-                  <TableCell className="font-mono text-xs">{s.studentId}</TableCell>
-                  <TableCell>{s.fullName}</TableCell>
-                  <TableCell>
-                    {pay ? (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-success/15 text-success font-medium">
-                        Paid
-                      </span>
-                    ) : (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
-                        Pending
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell>{pkg?.name || "—"}</TableCell>
-                  <TableCell className="font-mono">
-                    {pay ? `Rs. ${pay.amount.toLocaleString()}` : "—"}
-                  </TableCell>
-                  <TableCell className="font-mono text-xs">{pay?.paidOn || "—"}</TableCell>
-                  <TableCell className="text-right">
-                    {pay ? (
+            {filteredPayments.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                  No payments recorded.
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredPayments.map((pay) => {
+                const stu = students.find((s) => s.id === pay.studentId);
+                const pkg = pay.packageId ? packages.find((p) => p.id === pay.packageId) : null;
+                return (
+                  <TableRow key={pay.id}>
+                    <TableCell className="font-mono text-xs">{stu?.studentId || "—"}</TableCell>
+                    <TableCell>{stu?.fullName || "Unknown"}</TableCell>
+                    <TableCell>{pkg?.name || "—"}</TableCell>
+                    <TableCell className="font-mono text-xs">{pay.month}</TableCell>
+                    <TableCell className="font-mono">Rs. {pay.amount.toLocaleString()}</TableCell>
+                    <TableCell className="font-mono text-xs">{pay.paidOn}</TableCell>
+                    <TableCell className="text-right">
                       <Button
                         size="icon"
                         variant="ghost"
@@ -316,15 +314,11 @@ function PaymentsTab() {
                       >
                         <Trash2 size={14} className="text-destructive" />
                       </Button>
-                    ) : (
-                      <Button size="sm" onClick={() => openForStudent(s.id)}>
-                        <Plus size={14} /> Record
-                      </Button>
-                    )}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
           </TableBody>
         </Table>
       </div>

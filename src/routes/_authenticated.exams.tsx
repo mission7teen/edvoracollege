@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Award, Plus, Trash2, Save, ArrowLeft } from "lucide-react";
+import { Award, Plus, Trash2, Save, ArrowLeft, ClipboardPaste } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -274,21 +275,44 @@ function MarksEntry({ examId, onBack }: { examId: string; onBack: () => void }) 
   }, [roster, existingMarks, examId]);
 
   const [values, setValues] = useState<Record<string, string>>(initial);
-  const [bulk, setBulk] = useState("");
+  const [importOpen, setImportOpen] = useState(false);
+  const [importText, setImportText] = useState("");
 
   const subject = courses.find((c) => c.id === exam.subjectId)?.name || "";
   const batch = batches.find((b) => b.id === exam.batchId)?.name || "";
 
-  const applyBulk = () => {
-    const n = Number(bulk);
-    if (Number.isNaN(n)) {
-      toast.error("Enter a valid number");
-      return;
+  const openImport = () => {
+    // Prefill with current roster as template: StudentID<TAB>Name<TAB>Marks
+    const template = roster
+      .map((s) => `${s.studentId}\t${s.fullName}\t${values[s.id] ?? ""}`)
+      .join("\n");
+    setImportText(template);
+    setImportOpen(true);
+  };
+
+  const applyImport = () => {
+    const lines = importText.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    const next: Record<string, string> = { ...values };
+    let matched = 0;
+    let unknown = 0;
+    for (const line of lines) {
+      const parts = line.split(/\t|,|;/).map((p) => p.trim());
+      if (parts.length === 0) continue;
+      // Skip header row
+      if (/student/i.test(parts[0]) && /mark/i.test(parts[parts.length - 1])) continue;
+      const sid = parts[0];
+      const marksRaw = parts[parts.length - 1];
+      if (!sid || marksRaw === "") continue;
+      const stu = roster.find((s) => s.studentId === sid);
+      if (!stu) { unknown++; continue; }
+      const n = Number(marksRaw);
+      if (Number.isNaN(n)) continue;
+      next[stu.id] = String(n);
+      matched++;
     }
-    const next: Record<string, string> = {};
-    for (const s of roster) next[s.id] = String(n);
     setValues(next);
-    toast.success(`Applied ${n} to ${roster.length} students`);
+    setImportOpen(false);
+    toast.success(`Imported ${matched} marks${unknown ? ` · ${unknown} unknown IDs skipped` : ""}`);
   };
 
   const handleSave = () => {
@@ -314,19 +338,39 @@ function MarksEntry({ examId, onBack }: { examId: string; onBack: () => void }) 
           <ArrowLeft size={14} /> Back
         </Button>
         <div className="flex items-center gap-2 ml-auto">
-          <Input
-            type="number"
-            placeholder="Bulk marks"
-            value={bulk}
-            onChange={(e) => setBulk(e.target.value)}
-            className="w-32"
-          />
-          <Button variant="outline" onClick={applyBulk}>Apply to all</Button>
+          <Button variant="outline" onClick={openImport} className="gap-1">
+            <ClipboardPaste size={14} /> Bulk Import
+          </Button>
           <Button className="gap-1 gradient-primary text-primary-foreground" onClick={handleSave}>
             <Save size={14} /> Save
           </Button>
         </div>
       </div>
+
+      <Dialog open={importOpen} onOpenChange={setImportOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Bulk Import Marks</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground">
+              Paste from Google Sheets / Excel. Format per row: <code>StudentID [Tab] Name [Tab] Marks</code>.
+              Only <b>Student ID</b> (first column) and <b>Marks</b> (last column) are used. Comma and semicolon are also accepted.
+            </p>
+            <Textarea
+              rows={14}
+              value={importText}
+              onChange={(e) => setImportText(e.target.value)}
+              className="font-mono text-xs"
+              placeholder={"S001\tJohn Doe\t85\nS002\tJane Smith\t72"}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setImportOpen(false)}>Cancel</Button>
+            <Button onClick={applyImport}>Import</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {roster.length === 0 ? (
         <div className="rounded-2xl border border-dashed p-12 text-center text-muted-foreground">
