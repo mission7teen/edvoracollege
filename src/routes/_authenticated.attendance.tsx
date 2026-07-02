@@ -241,6 +241,7 @@ function AttendancePage() {
           batchName: batch?.name ?? "",
           subjectName: subject?.name ?? "",
           collegeName: "EDVORA COLLEGE",
+          sender: "94716126128",
           recipients,
         },
       })
