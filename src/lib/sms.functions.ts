@@ -43,7 +43,12 @@ export const sendAttendanceSMS = createServerFn({ method: "POST" })
     if (!GATEWAYAPI_API_KEY) throw new Error("GatewayAPI connection is not configured");
 
     const college = data.collegeName || "EDVORA COLLEGE";
-    const sender = (data.sender || "EDVORA").slice(0, 11);
+    // Numeric sender (MSISDN without +) — max 15 digits. Alphanumeric max 11 chars.
+    const rawSender = (data.sender || "94716126128").trim();
+    const isNumeric = /^\+?\d+$/.test(rawSender);
+    const sender = isNumeric
+      ? rawSender.replace(/\D/g, "").slice(0, 15)
+      : rawSender.slice(0, 11);
     const url = "https://connector-gateway.lovable.dev/gatewayapi/mobile/multi";
 
     const messages: Array<{ sender: string; recipient: number; message: string; reference?: string }> = [];
