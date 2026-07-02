@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Check, ClipboardCheck, Save, X, Sheet as SheetIcon, QrCode, Nfc } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { saveAttendanceToSheets } from "@/lib/sheets.functions";
-import { sendAttendanceWhatsApp } from "@/lib/whatsapp.functions";
+import { sendAttendanceSMS } from "@/lib/sms.functions";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { QRScanner } from "@/components/QRScanner";
@@ -56,7 +56,7 @@ function AttendancePage() {
   const [nfcActive, setNfcActive] = useState(false);
   const nfcAbortRef = useRef<AbortController | null>(null);
   const saveToSheetsFn = useServerFn(saveAttendanceToSheets);
-  const sendWhatsAppFn = useServerFn(sendAttendanceWhatsApp);
+  const sendSMSFn = useServerFn(sendAttendanceSMS);
   const notifyParents = true;
 
   const courseBatches = batches;
@@ -231,11 +231,11 @@ function AttendancePage() {
           status: final[s.id],
         }));
       if (!recipients.length) {
-        toast.info("No parent phone numbers on file — skipped WhatsApp notifications.");
+        toast.info("No parent phone numbers on file — skipped SMS notifications.");
         return;
       }
-      toast.info(`Sending WhatsApp to ${recipients.length} parents…`);
-      sendWhatsAppFn({
+      toast.info(`Sending SMS to ${recipients.length} parents…`);
+      sendSMSFn({
         data: {
           date,
           batchName: batch?.name ?? "",
@@ -246,11 +246,11 @@ function AttendancePage() {
       })
         .then((res) => {
           toast.success(
-            `WhatsApp: ${res.sent} sent · ${res.skipped} skipped · ${res.failed} failed`,
+            `SMS: ${res.sent} sent · ${res.skipped} skipped · ${res.failed} failed`,
           );
-          if (res.errors?.length) console.warn("WAAPI errors:", res.errors);
+          if (res.errors?.length) console.warn("SMS errors:", res.errors);
         })
-        .catch((e: Error) => toast.error(`WhatsApp failed: ${e.message}`));
+        .catch((e: Error) => toast.error(`SMS failed: ${e.message}`));
     }
   }
 
