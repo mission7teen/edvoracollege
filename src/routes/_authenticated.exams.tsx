@@ -29,6 +29,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useData, computeGrade } from "@/lib/store";
+import { groupStudentsByGender } from "@/lib/student-utils";
+import { GenderGroupCard } from "@/components/GenderGroupCard";
 import type { ExamType } from "@/lib/types";
 import { toast } from "sonner";
 
@@ -377,48 +379,58 @@ function MarksEntry({ examId, onBack }: { examId: string; onBack: () => void }) 
           No active students in this batch.
         </div>
       ) : (
-        <div className="rounded-2xl border border-border bg-card overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-32">Student ID</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead className="w-40">Marks (of {exam.maxMarks})</TableHead>
-                <TableHead className="w-24">Grade</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {roster.map((s) => {
-                const v = values[s.id] ?? "";
-                const n = Number(v);
-                const grade = v !== "" && !Number.isNaN(n) ? computeGrade(n, exam.maxMarks) : "";
-                return (
-                  <TableRow key={s.id}>
-                    <TableCell className="font-mono text-xs">{s.studentId}</TableCell>
-                    <TableCell>{s.fullName}</TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min={0}
-                        max={exam.maxMarks}
-                        value={v}
-                        onChange={(e) =>
-                          setValues((prev) => ({ ...prev, [s.id]: e.target.value }))
-                        }
-                      />
-                    </TableCell>
-                    <TableCell>
-                      {grade && (
-                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                          {grade}
-                        </span>
-                      )}
-                    </TableCell>
+        <div className="space-y-4">
+          {groupStudentsByGender(roster).map((g, gi) => (
+            <GenderGroupCard
+              key={g.key}
+              label={g.label}
+              count={g.students.length}
+              index={gi}
+              className="border border-border bg-card"
+            >
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-32">Student ID</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead className="w-40">Marks (of {exam.maxMarks})</TableHead>
+                    <TableHead className="w-24">Grade</TableHead>
                   </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                </TableHeader>
+                <TableBody>
+                  {g.students.map((s) => {
+                    const v = values[s.id] ?? "";
+                    const n = Number(v);
+                    const grade = v !== "" && !Number.isNaN(n) ? computeGrade(n, exam.maxMarks) : "";
+                    return (
+                      <TableRow key={s.id}>
+                        <TableCell className="font-mono text-xs">{s.studentId}</TableCell>
+                        <TableCell>{s.fullName}</TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min={0}
+                            max={exam.maxMarks}
+                            value={v}
+                            onChange={(e) =>
+                              setValues((prev) => ({ ...prev, [s.id]: e.target.value }))
+                            }
+                          />
+                        </TableCell>
+                        <TableCell>
+                          {grade && (
+                            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                              {grade}
+                            </span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </GenderGroupCard>
+          ))}
         </div>
       )}
     </AppShell>
