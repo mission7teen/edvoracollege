@@ -17,6 +17,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useData } from "@/lib/store";
+import { groupStudentsByGender } from "@/lib/student-utils";
+import { GenderGroupCard } from "@/components/GenderGroupCard";
 import type { AttendanceStatus } from "@/lib/types";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -469,54 +471,68 @@ function AttendancePage() {
         </div>
       )}
 
-      <motion.div layout className="mt-4 glass-card rounded-2xl overflow-hidden">
-        {!batchId ? (
+      {!batchId ? (
+        <div className="mt-4">
           <EmptyState
             icon={ClipboardCheck}
             title="Select a course and batch"
             description="Choose a batch above to load its roster and start marking attendance."
           />
-        ) : roster.length === 0 ? (
+        </div>
+      ) : roster.length === 0 ? (
+        <div className="mt-4">
           <EmptyState icon={ClipboardCheck} title="No active students in this batch" />
-        ) : (
-          <div className="divide-y divide-border">
-            {roster.map((s, i) => {
-              const cur = effective[s.id];
-              return (
-                <motion.div
-                  key={s.id}
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.015 }}
-                  className="px-4 py-3 flex items-center gap-3 hover:bg-secondary/40"
-                >
-                  <img src={s.photoUrl} alt="" className="w-10 h-10 rounded-full bg-secondary" />
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium truncate">{s.fullName}</div>
-                    <div className="text-xs text-muted-foreground">{s.studentId}</div>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {statusConfig.map((sc) => (
-                      <button
-                        key={sc.value}
-                        onClick={() => mark(s.id, sc.value)}
-                        className={cn(
-                          "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all",
-                          cur === sc.value
-                            ? `${sc.cls} border-transparent shadow-elegant`
-                            : "border-border bg-card text-muted-foreground hover:text-foreground hover:bg-secondary",
-                        )}
-                      >
-                        <sc.icon size={13} /> <span className="hidden sm:inline">{sc.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        )}
-      </motion.div>
+        </div>
+      ) : (
+        <div className="mt-4 space-y-4">
+          {groupStudentsByGender(roster).map((g, gi) => (
+            <GenderGroupCard
+              key={g.key}
+              label={g.label}
+              count={g.students.length}
+              index={gi}
+              className="glass-card"
+            >
+              <div className="divide-y divide-border">
+                {g.students.map((s, i) => {
+                  const cur = effective[s.id];
+                  return (
+                    <motion.div
+                      key={s.id}
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.015 }}
+                      className="px-4 py-3 flex items-center gap-3 hover:bg-secondary/40"
+                    >
+                      <img src={s.photoUrl} alt="" className="w-10 h-10 rounded-full bg-secondary" />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate">{s.fullName}</div>
+                        <div className="text-xs text-muted-foreground">{s.studentId}</div>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {statusConfig.map((sc) => (
+                          <button
+                            key={sc.value}
+                            onClick={() => mark(s.id, sc.value)}
+                            className={cn(
+                              "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all",
+                              cur === sc.value
+                                ? `${sc.cls} border-transparent shadow-elegant`
+                                : "border-border bg-card text-muted-foreground hover:text-foreground hover:bg-secondary",
+                            )}
+                          >
+                            <sc.icon size={13} /> <span className="hidden sm:inline">{sc.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </GenderGroupCard>
+          ))}
+        </div>
+      )}
     </AppShell>
   );
 }

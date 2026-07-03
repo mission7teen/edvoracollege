@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { GenderGroupCard } from "@/components/GenderGroupCard";
 import {
   Plus,
   Search,
@@ -48,6 +48,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useData } from "@/lib/store";
+import { groupStudentsByGender } from "@/lib/student-utils";
 import type { Student } from "@/lib/types";
 import { toast } from "sonner";
 import { exportCSV } from "@/lib/exporters";
@@ -453,102 +454,110 @@ function StudentsPage() {
         </Dialog>
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mt-4 glass-card rounded-2xl overflow-hidden"
-      >
-        {filtered.length === 0 ? (
+      {filtered.length === 0 ? (
+        <div className="mt-4">
           <EmptyState
             icon={Users}
             title="No students match"
             description="Try adjusting your search or filters."
           />
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-secondary/60">
-                <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground">
-                  <th className="px-4 py-3">Student</th>
-                  <th className="px-4 py-3">ID</th>
-                  <th className="px-4 py-3 hidden md:table-cell">Course</th>
-                  <th className="px-4 py-3 hidden lg:table-cell">Batch</th>
-                  <th className="px-4 py-3 hidden md:table-cell">Attendance</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((s) => {
-                  const rate = studentRate(attendance, s.id);
-                  return (
-                    <tr
-                      key={s.id}
-                      className="border-t border-border hover:bg-secondary/40 transition-colors"
-                    >
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={s.photoUrl}
-                            alt=""
-                            className="w-9 h-9 rounded-full bg-secondary"
-                          />
-                          <div>
-                            <div className="font-medium">{s.fullName}</div>
-                            <div className="text-xs text-muted-foreground">{s.email}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 font-mono text-xs">{s.studentId}</td>
-                      <td className="px-4 py-3 hidden md:table-cell">
-                        {courseMap.get(s.courseId)?.name ?? "—"}
-                      </td>
-                      <td className="px-4 py-3 hidden lg:table-cell">
-                        {batchMap.get(s.batchId)?.name ?? "—"}
-                      </td>
-                      <td className="px-4 py-3 hidden md:table-cell">
-                        <div className="flex items-center gap-2">
-                          <div className="w-16 h-1.5 rounded-full bg-secondary overflow-hidden">
-                            <div
-                              className="h-full gradient-primary"
-                              style={{ width: `${rate}%` }}
-                            />
-                          </div>
-                          <span className="text-xs font-semibold">{rate}%</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <StatusBadge status={s.status} />
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex justify-end gap-1">
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            title="Student QR Pass"
-                            onClick={() => setViewingQR(s)}
-                          >
-                            <QrIcon size={15} className="text-primary" />
-                          </Button>
-                          <Button size="icon" variant="ghost" onClick={() => setViewing(s)}>
-                            <Eye size={15} />
-                          </Button>
-                          <Button size="icon" variant="ghost" onClick={() => openEdit(s)}>
-                            <Pencil size={15} />
-                          </Button>
-                          <Button size="icon" variant="ghost" onClick={() => remove(s)}>
-                            <Trash2 size={15} className="text-destructive" />
-                          </Button>
-                        </div>
-                      </td>
+        </div>
+      ) : (
+        <div className="mt-4 space-y-4">
+          {groupStudentsByGender(filtered).map((g, gi) => (
+            <GenderGroupCard
+              key={g.key}
+              label={g.label}
+              count={g.students.length}
+              index={gi}
+              className="glass-card"
+            >
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-secondary/60">
+                    <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground">
+                      <th className="px-4 py-3">Student</th>
+                      <th className="px-4 py-3">ID</th>
+                      <th className="px-4 py-3 hidden md:table-cell">Course</th>
+                      <th className="px-4 py-3 hidden lg:table-cell">Batch</th>
+                      <th className="px-4 py-3 hidden md:table-cell">Attendance</th>
+                      <th className="px-4 py-3">Status</th>
+                      <th className="px-4 py-3 text-right">Actions</th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </motion.div>
+                  </thead>
+                  <tbody>
+                    {g.students.map((s) => {
+                      const rate = studentRate(attendance, s.id);
+                      return (
+                        <tr
+                          key={s.id}
+                          className="border-t border-border hover:bg-secondary/40 transition-colors"
+                        >
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-3">
+                              <img
+                                src={s.photoUrl}
+                                alt=""
+                                className="w-9 h-9 rounded-full bg-secondary"
+                              />
+                              <div>
+                                <div className="font-medium">{s.fullName}</div>
+                                <div className="text-xs text-muted-foreground">{s.email}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 font-mono text-xs">{s.studentId}</td>
+                          <td className="px-4 py-3 hidden md:table-cell">
+                            {courseMap.get(s.courseId)?.name ?? "—"}
+                          </td>
+                          <td className="px-4 py-3 hidden lg:table-cell">
+                            {batchMap.get(s.batchId)?.name ?? "—"}
+                          </td>
+                          <td className="px-4 py-3 hidden md:table-cell">
+                            <div className="flex items-center gap-2">
+                              <div className="w-16 h-1.5 rounded-full bg-secondary overflow-hidden">
+                                <div
+                                  className="h-full gradient-primary"
+                                  style={{ width: `${rate}%` }}
+                                />
+                              </div>
+                              <span className="text-xs font-semibold">{rate}%</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <StatusBadge status={s.status} />
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex justify-end gap-1">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                title="Student QR Pass"
+                                onClick={() => setViewingQR(s)}
+                              >
+                                <QrIcon size={15} className="text-primary" />
+                              </Button>
+                              <Button size="icon" variant="ghost" onClick={() => setViewing(s)}>
+                                <Eye size={15} />
+                              </Button>
+                              <Button size="icon" variant="ghost" onClick={() => openEdit(s)}>
+                                <Pencil size={15} />
+                              </Button>
+                              <Button size="icon" variant="ghost" onClick={() => remove(s)}>
+                                <Trash2 size={15} className="text-destructive" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </GenderGroupCard>
+          ))}
+        </div>
+      )}
 
       <Dialog open={!!viewing} onOpenChange={(v) => !v && setViewing(null)}>
         <DialogContent className="max-w-2xl">
