@@ -12,6 +12,7 @@ const RowSchema = z.object({
   remarks: z.string().default(""),
   batch: z.string(),
   teacher: z.string().default(""),
+  gender: z.string().optional().default(""),
 });
 
 const InputSchema = z.object({
