@@ -272,6 +272,7 @@ function AttendancePage() {
       remarks: "",
       batch: batch.name,
       teacher: teacher?.fullName ?? "",
+      gender: s.gender,
     }));
     if (!rows.length) return toast.error("No students to save");
     setSavingSheet(true);
