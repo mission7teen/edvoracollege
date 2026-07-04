@@ -348,8 +348,22 @@ export const saveAttendanceToSheets = createServerFn({ method: "POST" })
     for (let i = 0; i < dateCount; i++) row4Out.push("");
     row4Out.push("", "");
 
-    const studentRowsOut: unknown[][] = studentList.map((stu, idx) => {
-      const excelRow = 5 + idx;
+    // Build output rows, inserting a blank spacer row between gender groups
+    // (Male → blank → Female → blank → Other).
+    const emptyRow = (): unknown[] => {
+      const r: unknown[] = ["", ""];
+      for (let i = 0; i < dateCount; i++) r.push("");
+      r.push("", "");
+      return r;
+    };
+    const studentRowsOut: unknown[][] = [];
+    let prevGender: string | null = null;
+    for (const stu of studentList) {
+      if (prevGender !== null && stu.gender !== prevGender) {
+        studentRowsOut.push(emptyRow());
+      }
+      prevGender = stu.gender;
+      const excelRow = 5 + studentRowsOut.length;
       const out: unknown[] = [stu.id, stu.name];
       for (const s of dateSerials) {
         const v = stu.days[s];
@@ -357,11 +371,11 @@ export const saveAttendanceToSheets = createServerFn({ method: "POST" })
       }
       out.push(`=COUNTIF($${firstDayColL}${excelRow}:$${lastDayColL}${excelRow},$${absentColL}$3)`);
       out.push(`=COUNTIF($${firstDayColL}${excelRow}:$${lastDayColL}${excelRow},$${presentColL}$3)`);
-      return out;
-    });
+      studentRowsOut.push(out);
+    }
 
     const firstData = 5;
-    const lastData = 5 + studentList.length - 1;
+    const lastData = 5 + studentRowsOut.length - 1;
     const dailyTotalRow: unknown[] = ["Daily Total", ""];
     for (let i = 0; i < dateCount; i++) {
       const c = colLetter(3 + i);
