@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
 import { GenderGroupCard } from "@/components/GenderGroupCard";
 import {
@@ -538,8 +538,13 @@ function StudentsPage() {
                               >
                                 <QrIcon size={15} className="text-primary" />
                               </Button>
-                              <Button size="icon" variant="ghost" onClick={() => setViewing(s)}>
-                                <Eye size={15} />
+                              <Button size="icon" variant="ghost" asChild title="Open portfolio">
+                                <Link
+                                  to="/students/$studentId"
+                                  params={{ studentId: s.id }}
+                                >
+                                  <Eye size={15} />
+                                </Link>
                               </Button>
                               <Button size="icon" variant="ghost" onClick={() => openEdit(s)}>
                                 <Pencil size={15} />
