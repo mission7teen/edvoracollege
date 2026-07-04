@@ -379,7 +379,7 @@ export const saveAttendanceToSheets = createServerFn({ method: "POST" })
     const dailyTotalRow: unknown[] = ["Daily Total", ""];
     for (let i = 0; i < dateCount; i++) {
       const c = colLetter(3 + i);
-      dailyTotalRow.push(studentList.length > 0 ? `=COUNTIF(${c}${firstData}:${c}${lastData},$${presentColL}$3)` : 0);
+      dailyTotalRow.push(studentRowsOut.length > 0 ? `=COUNTIF(${c}${firstData}:${c}${lastData},$${presentColL}$3)` : 0);
     }
     dailyTotalRow.push("", "");
 
@@ -411,7 +411,7 @@ export const saveAttendanceToSheets = createServerFn({ method: "POST" })
     await gw(`/spreadsheets/${spreadsheetId}:batchUpdate`, {
       method: "POST",
       body: JSON.stringify({
-        requests: buildFormattingRequests({ sheetId: subjectSheetId, dateCount, studentCount: studentList.length }),
+        requests: buildFormattingRequests({ sheetId: subjectSheetId, dateCount, studentCount: studentRowsOut.length }),
       }),
     });
 
