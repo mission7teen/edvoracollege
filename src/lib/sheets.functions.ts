@@ -264,7 +264,7 @@ export const saveAttendanceToSheets = createServerFn({ method: "POST" })
       else break;
     }
 
-    type StuRow = { id: string; name: string; days: Record<number, unknown> };
+    type StuRow = { id: string; name: string; days: Record<number, unknown>; gender: string };
     const studentList: StuRow[] = [];
     const teacherByDate: Record<number, string> = {};
     let teacherRowIdx = -1;
@@ -279,7 +279,7 @@ export const saveAttendanceToSheets = createServerFn({ method: "POST" })
         const cell = r[2 + di];
         if (cell !== undefined && cell !== null && cell !== "") days[dateSerials[di]] = cell;
       }
-      studentList.push({ id: String(sid), name: String(r[1] ?? ""), days });
+      studentList.push({ id: String(sid), name: String(r[1] ?? ""), days, gender: "" });
     }
     if (teacherRowIdx >= 0) {
       const tr = existingValues[teacherRowIdx] || [];
@@ -302,16 +302,21 @@ export const saveAttendanceToSheets = createServerFn({ method: "POST" })
     for (const r of data.rows) {
       let stu = byId.get(r.studentId);
       if (!stu) {
-        stu = { id: r.studentId, name: r.name, days: {} };
+        stu = { id: r.studentId, name: r.name, days: {}, gender: r.gender ?? "" };
         byId.set(r.studentId, stu);
         studentList.push(stu);
       } else {
         stu.name = r.name;
+        if (r.gender) stu.gender = r.gender;
       }
       stu.days[targetSerial] = r.status === "Present" ? 1 : 0;
     }
 
+    const genderRank = (g: string) =>
+      g === "Male" ? 0 : g === "Female" ? 1 : 2;
     studentList.sort((a, b) => {
+      const gr = genderRank(a.gender) - genderRank(b.gender);
+      if (gr !== 0) return gr;
       const an = parseInt(a.id, 10);
       const bn = parseInt(b.id, 10);
       if (!isNaN(an) && !isNaN(bn)) return an - bn;
