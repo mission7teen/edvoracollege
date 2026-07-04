@@ -12,7 +12,6 @@ const RowSchema = z.object({
   remarks: z.string().default(""),
   batch: z.string(),
   teacher: z.string().default(""),
-  gender: z.string().optional().default(""),
 });
 
 const InputSchema = z.object({
@@ -264,7 +263,7 @@ export const saveAttendanceToSheets = createServerFn({ method: "POST" })
       else break;
     }
 
-    type StuRow = { id: string; name: string; days: Record<number, unknown>; gender: string };
+    type StuRow = { id: string; name: string; days: Record<number, unknown> };
     const studentList: StuRow[] = [];
     const teacherByDate: Record<number, string> = {};
     let teacherRowIdx = -1;
@@ -279,7 +278,7 @@ export const saveAttendanceToSheets = createServerFn({ method: "POST" })
         const cell = r[2 + di];
         if (cell !== undefined && cell !== null && cell !== "") days[dateSerials[di]] = cell;
       }
-      studentList.push({ id: String(sid), name: String(r[1] ?? ""), days, gender: "" });
+      studentList.push({ id: String(sid), name: String(r[1] ?? ""), days });
     }
     if (teacherRowIdx >= 0) {
       const tr = existingValues[teacherRowIdx] || [];
@@ -302,21 +301,16 @@ export const saveAttendanceToSheets = createServerFn({ method: "POST" })
     for (const r of data.rows) {
       let stu = byId.get(r.studentId);
       if (!stu) {
-        stu = { id: r.studentId, name: r.name, days: {}, gender: r.gender ?? "" };
+        stu = { id: r.studentId, name: r.name, days: {} };
         byId.set(r.studentId, stu);
         studentList.push(stu);
       } else {
         stu.name = r.name;
-        if (r.gender) stu.gender = r.gender;
       }
       stu.days[targetSerial] = r.status === "Present" ? 1 : 0;
     }
 
-    const genderRank = (g: string) =>
-      g === "Male" ? 0 : g === "Female" ? 1 : 2;
     studentList.sort((a, b) => {
-      const gr = genderRank(a.gender) - genderRank(b.gender);
-      if (gr !== 0) return gr;
       const an = parseInt(a.id, 10);
       const bn = parseInt(b.id, 10);
       if (!isNaN(an) && !isNaN(bn)) return an - bn;
@@ -348,22 +342,8 @@ export const saveAttendanceToSheets = createServerFn({ method: "POST" })
     for (let i = 0; i < dateCount; i++) row4Out.push("");
     row4Out.push("", "");
 
-    // Build output rows, inserting a blank spacer row between gender groups
-    // (Male → blank → Female → blank → Other).
-    const emptyRow = (): unknown[] => {
-      const r: unknown[] = ["", ""];
-      for (let i = 0; i < dateCount; i++) r.push("");
-      r.push("", "");
-      return r;
-    };
-    const studentRowsOut: unknown[][] = [];
-    let prevGender: string | null = null;
-    for (const stu of studentList) {
-      if (prevGender !== null && stu.gender !== prevGender) {
-        studentRowsOut.push(emptyRow());
-      }
-      prevGender = stu.gender;
-      const excelRow = 5 + studentRowsOut.length;
+    const studentRowsOut: unknown[][] = studentList.map((stu, idx) => {
+      const excelRow = 5 + idx;
       const out: unknown[] = [stu.id, stu.name];
       for (const s of dateSerials) {
         const v = stu.days[s];
@@ -371,15 +351,15 @@ export const saveAttendanceToSheets = createServerFn({ method: "POST" })
       }
       out.push(`=COUNTIF($${firstDayColL}${excelRow}:$${lastDayColL}${excelRow},$${absentColL}$3)`);
       out.push(`=COUNTIF($${firstDayColL}${excelRow}:$${lastDayColL}${excelRow},$${presentColL}$3)`);
-      studentRowsOut.push(out);
-    }
+      return out;
+    });
 
     const firstData = 5;
-    const lastData = 5 + studentRowsOut.length - 1;
+    const lastData = 5 + studentList.length - 1;
     const dailyTotalRow: unknown[] = ["Daily Total", ""];
     for (let i = 0; i < dateCount; i++) {
       const c = colLetter(3 + i);
-      dailyTotalRow.push(studentRowsOut.length > 0 ? `=COUNTIF(${c}${firstData}:${c}${lastData},$${presentColL}$3)` : 0);
+      dailyTotalRow.push(studentList.length > 0 ? `=COUNTIF(${c}${firstData}:${c}${lastData},$${presentColL}$3)` : 0);
     }
     dailyTotalRow.push("", "");
 
@@ -411,7 +391,7 @@ export const saveAttendanceToSheets = createServerFn({ method: "POST" })
     await gw(`/spreadsheets/${spreadsheetId}:batchUpdate`, {
       method: "POST",
       body: JSON.stringify({
-        requests: buildFormattingRequests({ sheetId: subjectSheetId, dateCount, studentCount: studentRowsOut.length }),
+        requests: buildFormattingRequests({ sheetId: subjectSheetId, dateCount, studentCount: studentList.length }),
       }),
     });
 

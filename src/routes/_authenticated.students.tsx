@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
 import { GenderGroupCard } from "@/components/GenderGroupCard";
 import {
@@ -463,8 +463,7 @@ function StudentsPage() {
           />
         </div>
       ) : (
-        <div className="mt-4 overflow-x-auto">
-          <div className="space-y-4 min-w-[720px]">
+        <div className="mt-4 space-y-4">
           {groupStudentsByGender(filtered).map((g, gi) => (
             <GenderGroupCard
               key={g.key}
@@ -473,7 +472,7 @@ function StudentsPage() {
               index={gi}
               className="glass-card"
             >
-              <div>
+              <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-secondary/60">
                     <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground">
@@ -538,13 +537,8 @@ function StudentsPage() {
                               >
                                 <QrIcon size={15} className="text-primary" />
                               </Button>
-                              <Button size="icon" variant="ghost" asChild title="Open portfolio">
-                                <Link
-                                  to="/students/$studentId"
-                                  params={{ studentId: s.id }}
-                                >
-                                  <Eye size={15} />
-                                </Link>
+                              <Button size="icon" variant="ghost" onClick={() => setViewing(s)}>
+                                <Eye size={15} />
                               </Button>
                               <Button size="icon" variant="ghost" onClick={() => openEdit(s)}>
                                 <Pencil size={15} />
@@ -562,7 +556,6 @@ function StudentsPage() {
               </div>
             </GenderGroupCard>
           ))}
-          </div>
         </div>
       )}
 
