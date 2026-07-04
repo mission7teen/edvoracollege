@@ -154,6 +154,7 @@ function StudentPortfolioPage() {
     rate >= 85 ? "success" : rate >= attendanceThreshold ? "warning" : "destructive";
 
   function printReport() {
+    const s = student!;
     const rows = my
       .slice()
       .sort((a, b) => a.date.localeCompare(b.date))
@@ -161,11 +162,12 @@ function StudentPortfolioPage() {
         const c = courses.find((x) => x.id === r.courseId)?.name || "—";
         return [r.date, c, r.status, r.remarks || ""];
       });
-    exportPDF(`${student.fullName} — Student Report`, ["Date", "Subject", "Status", "Remarks"], rows);
+    exportPDF(`${s.fullName} — Student Report`, ["Date", "Subject", "Status", "Remarks"], rows);
   }
 
   function downloadCsv() {
-    exportCSV(`${student.studentId}-attendance.csv`, my.map((r) => ({
+    const s = student!;
+    exportCSV(`${s.studentId}-attendance.csv`, my.map((r) => ({
       Date: r.date,
       Subject: courses.find((c) => c.id === r.courseId)?.name || "",
       Status: r.status,
