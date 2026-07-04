@@ -463,7 +463,8 @@ function StudentsPage() {
           />
         </div>
       ) : (
-        <div className="mt-4 space-y-4">
+        <div className="mt-4 overflow-x-auto">
+          <div className="space-y-4 min-w-[720px]">
           {groupStudentsByGender(filtered).map((g, gi) => (
             <GenderGroupCard
               key={g.key}
@@ -472,7 +473,7 @@ function StudentsPage() {
               index={gi}
               className="glass-card"
             >
-              <div className="overflow-x-auto">
+              <div>
                 <table className="w-full text-sm">
                   <thead className="bg-secondary/60">
                     <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground">
@@ -556,6 +557,7 @@ function StudentsPage() {
               </div>
             </GenderGroupCard>
           ))}
+          </div>
         </div>
       )}
 
