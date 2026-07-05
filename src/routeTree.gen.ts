@@ -13,7 +13,6 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as GuidesAttendanceSheetsRouteImport } from './routes/guides.attendance-sheets'
-import { Route as CheckinStudentIdRouteImport } from './routes/checkin.$studentId'
 import { Route as AuthenticatedTeachersRouteImport } from './routes/_authenticated.teachers'
 import { Route as AuthenticatedSubjectsRouteImport } from './routes/_authenticated.subjects'
 import { Route as AuthenticatedStudentsRouteImport } from './routes/_authenticated.students'
@@ -44,11 +43,6 @@ const IndexRoute = IndexRouteImport.update({
 const GuidesAttendanceSheetsRoute = GuidesAttendanceSheetsRouteImport.update({
   id: '/guides/attendance-sheets',
   path: '/guides/attendance-sheets',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CheckinStudentIdRoute = CheckinStudentIdRouteImport.update({
-  id: '/checkin/$studentId',
-  path: '/checkin/$studentId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedTeachersRoute = AuthenticatedTeachersRouteImport.update({
@@ -127,7 +121,6 @@ export interface FileRoutesByFullPath {
   '/students': typeof AuthenticatedStudentsRoute
   '/subjects': typeof AuthenticatedSubjectsRoute
   '/teachers': typeof AuthenticatedTeachersRoute
-  '/checkin/$studentId': typeof CheckinStudentIdRoute
   '/guides/attendance-sheets': typeof GuidesAttendanceSheetsRoute
 }
 export interface FileRoutesByTo {
@@ -145,7 +138,6 @@ export interface FileRoutesByTo {
   '/students': typeof AuthenticatedStudentsRoute
   '/subjects': typeof AuthenticatedSubjectsRoute
   '/teachers': typeof AuthenticatedTeachersRoute
-  '/checkin/$studentId': typeof CheckinStudentIdRoute
   '/guides/attendance-sheets': typeof GuidesAttendanceSheetsRoute
 }
 export interface FileRoutesById {
@@ -165,7 +157,6 @@ export interface FileRoutesById {
   '/_authenticated/students': typeof AuthenticatedStudentsRoute
   '/_authenticated/subjects': typeof AuthenticatedSubjectsRoute
   '/_authenticated/teachers': typeof AuthenticatedTeachersRoute
-  '/checkin/$studentId': typeof CheckinStudentIdRoute
   '/guides/attendance-sheets': typeof GuidesAttendanceSheetsRoute
 }
 export interface FileRouteTypes {
@@ -185,7 +176,6 @@ export interface FileRouteTypes {
     | '/students'
     | '/subjects'
     | '/teachers'
-    | '/checkin/$studentId'
     | '/guides/attendance-sheets'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -203,7 +193,6 @@ export interface FileRouteTypes {
     | '/students'
     | '/subjects'
     | '/teachers'
-    | '/checkin/$studentId'
     | '/guides/attendance-sheets'
   id:
     | '__root__'
@@ -222,7 +211,6 @@ export interface FileRouteTypes {
     | '/_authenticated/students'
     | '/_authenticated/subjects'
     | '/_authenticated/teachers'
-    | '/checkin/$studentId'
     | '/guides/attendance-sheets'
   fileRoutesById: FileRoutesById
 }
@@ -230,7 +218,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
-  CheckinStudentIdRoute: typeof CheckinStudentIdRoute
   GuidesAttendanceSheetsRoute: typeof GuidesAttendanceSheetsRoute
 }
 
@@ -262,13 +249,6 @@ declare module '@tanstack/react-router' {
       path: '/guides/attendance-sheets'
       fullPath: '/guides/attendance-sheets'
       preLoaderRoute: typeof GuidesAttendanceSheetsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/checkin/$studentId': {
-      id: '/checkin/$studentId'
-      path: '/checkin/$studentId'
-      fullPath: '/checkin/$studentId'
-      preLoaderRoute: typeof CheckinStudentIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/teachers': {
@@ -396,19 +376,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
-  CheckinStudentIdRoute: CheckinStudentIdRoute,
   GuidesAttendanceSheetsRoute: GuidesAttendanceSheetsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
