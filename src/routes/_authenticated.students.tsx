@@ -534,17 +534,18 @@ function StudentsPage() {
                                 size="icon"
                                 variant="ghost"
                                 title="Student QR Pass"
+                                aria-label="View student QR pass"
                                 onClick={() => setViewingQR(s)}
                               >
                                 <QrIcon size={15} className="text-primary" />
                               </Button>
-                              <Button size="icon" variant="ghost" onClick={() => setViewing(s)}>
+                              <Button size="icon" variant="ghost" aria-label="View student details" onClick={() => setViewing(s)}>
                                 <Eye size={15} />
                               </Button>
-                              <Button size="icon" variant="ghost" onClick={() => openEdit(s)}>
+                              <Button size="icon" variant="ghost" aria-label="Edit student" onClick={() => openEdit(s)}>
                                 <Pencil size={15} />
                               </Button>
-                              <Button size="icon" variant="ghost" onClick={() => remove(s)}>
+                              <Button size="icon" variant="ghost" aria-label="Delete student" onClick={() => remove(s)}>
                                 <Trash2 size={15} className="text-destructive" />
                               </Button>
                             </div>
