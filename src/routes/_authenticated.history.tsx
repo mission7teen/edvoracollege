@@ -178,6 +178,7 @@ function HistoryPage() {
                         <Button
                           size="icon"
                           variant="ghost"
+                          aria-label="Delete attendance record"
                           onClick={() => {
                             setRecordToDelete(r.id);
                             setDeleteConfirmationOpen(true);
