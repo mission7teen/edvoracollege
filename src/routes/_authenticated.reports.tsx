@@ -192,9 +192,9 @@ function ReportsPage() {
         >
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="font-semibold tracking-tight flex items-center gap-2">
+              <h2 className="font-semibold tracking-tight flex items-center gap-2">
                 <FileBarChart size={16} /> {title}
-              </h3>
+              </h2>
               <p className="text-xs text-muted-foreground">
                 {records.length} records · {summary.rate}% present
               </p>

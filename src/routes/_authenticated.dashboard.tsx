@@ -138,7 +138,7 @@ function DashboardPage() {
         >
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="font-semibold tracking-tight">Monthly Attendance Trend</h3>
+              <h2 className="font-semibold tracking-tight">Monthly Attendance Trend</h2>
               <p className="text-xs text-muted-foreground">
                 Daily attendance rate across the last 30 sessions
               </p>
@@ -192,7 +192,7 @@ function DashboardPage() {
           transition={{ delay: 0.25 }}
           className="glass-card rounded-2xl p-5"
         >
-          <h3 className="font-semibold tracking-tight">Today's Breakdown</h3>
+          <h2 className="font-semibold tracking-tight">Today's Breakdown</h2>
           <p className="text-xs text-muted-foreground">Marked sessions for {today}</p>
           <ResponsiveContainer width="100%" height={240}>
             <PieChart>
@@ -222,9 +222,9 @@ function DashboardPage() {
           className="xl:col-span-2 glass-card rounded-2xl p-5"
         >
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold tracking-tight flex items-center gap-2">
+            <h2 className="font-semibold tracking-tight flex items-center gap-2">
               <Activity size={16} /> Recent Activity
-            </h3>
+            </h2>
           </div>
           <div className="divide-y divide-border">
             {recent.map((r) => (
@@ -252,7 +252,7 @@ function DashboardPage() {
           transition={{ delay: 0.35 }}
           className="glass-card rounded-2xl p-5"
         >
-          <h3 className="font-semibold tracking-tight">Top Performers</h3>
+          <h2 className="font-semibold tracking-tight">Top Performers</h2>
           <p className="text-xs text-muted-foreground mb-3">By attendance rate</p>
           <div className="space-y-3">
             {top.map((s, i) => (
