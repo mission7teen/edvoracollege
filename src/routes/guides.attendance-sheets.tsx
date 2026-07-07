@@ -33,7 +33,9 @@ export const Route = createFileRoute("/guides/attendance-sheets")({
         content:
           "Step-by-step guide to automating attendance sheets with Google Sheets and the Edvora platform.",
       },
+      { property: "og:url", content: "https://edvoracollege.lovable.app/guides/attendance-sheets" },
     ],
+    links: [{ rel: "canonical", href: "https://edvoracollege.lovable.app/guides/attendance-sheets" }],
   }),
   component: AttendanceSheetsGuide,
 });
