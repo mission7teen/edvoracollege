@@ -40,7 +40,7 @@ export function AppShell({
       <div className="flex-1 min-w-0 flex flex-col">
         <header className="sticky top-0 z-30 border-b border-border bg-background/70 backdrop-blur-xl">
           <div className="h-16 px-4 lg:px-8 flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setOpen(true)}>
+            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setOpen(true)} aria-label="Open navigation menu">
               <Menu />
             </Button>
             <div className="flex-1 min-w-0">
