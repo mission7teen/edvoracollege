@@ -56,6 +56,17 @@ import { studentRate } from "@/lib/metrics";
 
 export const Route = createFileRoute("/_authenticated/students")({
   component: StudentsPage,
+  head: () => ({
+    meta: [
+      { title: "Students · EDVORA COLLEGE" },
+      { name: "description", content: "Manage EDVORA COLLEGE student records, profiles, batches and QR passes." },
+      { property: "og:title", content: "Students · EDVORA COLLEGE" },
+      { property: "og:description", content: "Manage EDVORA COLLEGE student records, profiles, batches and QR passes." },
+      { property: "og:url", content: "https://edvoracollege.lovable.app/students" },
+      { name: "robots", content: "noindex" },
+    ],
+    links: [{ rel: "canonical", href: "https://edvoracollege.lovable.app/students" }],
+  }),
 });
 
 const empty: Omit<Student, "id" | "registrationDate"> = {
@@ -534,17 +545,18 @@ function StudentsPage() {
                                 size="icon"
                                 variant="ghost"
                                 title="Student QR Pass"
+                                aria-label="View student QR pass"
                                 onClick={() => setViewingQR(s)}
                               >
                                 <QrIcon size={15} className="text-primary" />
                               </Button>
-                              <Button size="icon" variant="ghost" onClick={() => setViewing(s)}>
+                              <Button size="icon" variant="ghost" aria-label="View student details" onClick={() => setViewing(s)}>
                                 <Eye size={15} />
                               </Button>
-                              <Button size="icon" variant="ghost" onClick={() => openEdit(s)}>
+                              <Button size="icon" variant="ghost" aria-label="Edit student" onClick={() => openEdit(s)}>
                                 <Pencil size={15} />
                               </Button>
-                              <Button size="icon" variant="ghost" onClick={() => remove(s)}>
+                              <Button size="icon" variant="ghost" aria-label="Delete student" onClick={() => remove(s)}>
                                 <Trash2 size={15} className="text-destructive" />
                               </Button>
                             </div>

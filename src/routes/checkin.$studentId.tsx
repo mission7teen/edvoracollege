@@ -59,20 +59,22 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/checkin/$studentId")({
   component: StudentPortfolioPage,
-  head: () => ({
-    meta: [
-      { title: "Student Portfolio · EDVORA COLLEGE" },
-      {
-        name: "description",
-        content: "Public read-only EDVORA COLLEGE student portfolio with attendance, exams, and payments.",
-      },
-      { property: "og:title", content: "Student Portfolio · EDVORA COLLEGE" },
-      {
-        property: "og:description",
-        content: "View a read-only EDVORA COLLEGE student portfolio.",
-      },
-    ],
-  }),
+  head: ({ params }) => {
+    const url = `https://edvoracollege.lovable.app/checkin/${params.studentId}`;
+    const title = `Student ${params.studentId} · EDVORA COLLEGE Portfolio`;
+    const description = `Public read-only portfolio for EDVORA COLLEGE student ${params.studentId} — attendance, exam results and payment status.`;
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:url", content: url },
+        { property: "og:type", content: "profile" },
+      ],
+      links: [{ rel: "canonical", href: url }],
+    };
+  },
 });
 
 type Portfolio = Awaited<ReturnType<typeof getStudentPortfolio>>;

@@ -19,7 +19,18 @@ import {
   YAxis,
 } from "recharts";
 
-export const Route = createFileRoute("/_authenticated/analytics")({ component: AnalyticsPage });
+export const Route = createFileRoute("/_authenticated/analytics")({ component: AnalyticsPage,
+  head: () => ({
+    meta: [
+      { title: "Analytics · EDVORA COLLEGE" },
+      { name: "description", content: "Attendance analytics and trend insights for EDVORA COLLEGE." },
+      { property: "og:title", content: "Analytics · EDVORA COLLEGE" },
+      { property: "og:description", content: "Attendance analytics and trend insights for EDVORA COLLEGE." },
+      { property: "og:url", content: "https://edvoracollege.lovable.app/analytics" },
+      { name: "robots", content: "noindex" },
+    ],
+    links: [{ rel: "canonical", href: "https://edvoracollege.lovable.app/analytics" }],
+  }) });
 
 function AnalyticsPage() {
   const { attendance, students, courses, batches, settings } = useData();

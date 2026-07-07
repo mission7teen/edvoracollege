@@ -29,7 +29,18 @@ import { useData } from "@/lib/store";
 import type { Batch } from "@/lib/types";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/batches")({ component: BatchesPage });
+export const Route = createFileRoute("/_authenticated/batches")({ component: BatchesPage,
+  head: () => ({
+    meta: [
+      { title: "Batches · EDVORA COLLEGE" },
+      { name: "description", content: "Manage class batches and cohorts at EDVORA COLLEGE." },
+      { property: "og:title", content: "Batches · EDVORA COLLEGE" },
+      { property: "og:description", content: "Manage class batches and cohorts at EDVORA COLLEGE." },
+      { property: "og:url", content: "https://edvoracollege.lovable.app/batches" },
+      { name: "robots", content: "noindex" },
+    ],
+    links: [{ rel: "canonical", href: "https://edvoracollege.lovable.app/batches" }],
+  }) });
 
 const empty: Omit<Batch, "id"> = {
   name: "",

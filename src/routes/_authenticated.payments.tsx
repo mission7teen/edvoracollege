@@ -34,6 +34,17 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/payments")({
   component: PaymentsPage,
+  head: () => ({
+    meta: [
+      { title: "Payments · EDVORA COLLEGE" },
+      { name: "description", content: "Track student payments and outstanding balances at EDVORA COLLEGE." },
+      { property: "og:title", content: "Payments · EDVORA COLLEGE" },
+      { property: "og:description", content: "Track student payments and outstanding balances at EDVORA COLLEGE." },
+      { property: "og:url", content: "https://edvoracollege.lovable.app/payments" },
+      { name: "robots", content: "noindex" },
+    ],
+    links: [{ rel: "canonical", href: "https://edvoracollege.lovable.app/payments" }],
+  }),
 });
 
 function currentMonth() {

@@ -14,6 +14,23 @@ import shieldLogo from "@/assets/images/shield_logo_1782228638116.jpg";
 export const Route = createFileRoute("/login")({
   ssr: false,
   component: LoginPage,
+  head: () => ({
+    meta: [
+      { title: "Sign in · EDVORA COLLEGE Staff Portal" },
+      {
+        name: "description",
+        content:
+          "Staff sign-in to the EDVORA COLLEGE attendance management system. Access student, batch, exam and attendance tools.",
+      },
+      { property: "og:title", content: "Sign in · EDVORA COLLEGE Staff Portal" },
+      {
+        property: "og:description",
+        content: "Staff sign-in to the EDVORA COLLEGE attendance management dashboard.",
+      },
+      { property: "og:url", content: "https://edvoracollege.lovable.app/login" },
+    ],
+    links: [{ rel: "canonical", href: "https://edvoracollege.lovable.app/login" }],
+  }),
 });
 
 function LoginPage() {
@@ -77,7 +94,7 @@ function LoginPage() {
           className="relative flex items-center gap-3"
         >
           <div className="w-11 h-11 rounded-xl overflow-hidden bg-white/15 backdrop-blur grid place-items-center">
-            <img src={shieldLogo} alt="EDVORA" className="w-full h-full object-cover" />
+            <img src={shieldLogo} alt="EDVORA COLLEGE Logo" className="w-full h-full object-cover" />
           </div>
           <div>
             <div className="font-bold tracking-tight text-lg">EDVORA COLLEGE</div>
@@ -118,7 +135,7 @@ function LoginPage() {
         >
           <div className="lg:hidden flex items-center gap-3 mb-6">
             <div className="w-11 h-11 rounded-xl overflow-hidden grid place-items-center">
-              <img src={shieldLogo} alt="EDVORA" className="w-full h-full object-cover" />
+              <img src={shieldLogo} alt="EDVORA COLLEGE Logo" className="w-full h-full object-cover" />
             </div>
             <div>
               <div className="font-bold tracking-tight">EDVORA COLLEGE</div>

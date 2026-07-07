@@ -21,7 +21,18 @@ import { useData } from "@/lib/store";
 import { toast } from "sonner";
 import { Building2, RotateCcw, Save } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/settings")({ component: SettingsPage });
+export const Route = createFileRoute("/_authenticated/settings")({ component: SettingsPage,
+  head: () => ({
+    meta: [
+      { title: "Settings · EDVORA COLLEGE" },
+      { name: "description", content: "Configure academic year, integrations and preferences for EDVORA COLLEGE." },
+      { property: "og:title", content: "Settings · EDVORA COLLEGE" },
+      { property: "og:description", content: "Configure academic year, integrations and preferences for EDVORA COLLEGE." },
+      { property: "og:url", content: "https://edvoracollege.lovable.app/settings" },
+      { name: "robots", content: "noindex" },
+    ],
+    links: [{ rel: "canonical", href: "https://edvoracollege.lovable.app/settings" }],
+  }) });
 
 function SettingsPage() {
   const { settings, updateSettings, reset } = useData();

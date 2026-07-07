@@ -36,6 +36,17 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/exams")({
   component: ExamsPage,
+  head: () => ({
+    meta: [
+      { title: "Exams · EDVORA COLLEGE" },
+      { name: "description", content: "Record exam marks and monitor student performance at EDVORA COLLEGE." },
+      { property: "og:title", content: "Exams · EDVORA COLLEGE" },
+      { property: "og:description", content: "Record exam marks and monitor student performance at EDVORA COLLEGE." },
+      { property: "og:url", content: "https://edvoracollege.lovable.app/exams" },
+      { name: "robots", content: "noindex" },
+    ],
+    links: [{ rel: "canonical", href: "https://edvoracollege.lovable.app/exams" }],
+  }),
 });
 
 function ExamsPage() {

@@ -28,7 +28,18 @@ import type { AttendanceStatus } from "@/lib/types";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/EmptyState";
 
-export const Route = createFileRoute("/_authenticated/history")({ component: HistoryPage });
+export const Route = createFileRoute("/_authenticated/history")({ component: HistoryPage,
+  head: () => ({
+    meta: [
+      { title: "Attendance History · EDVORA COLLEGE" },
+      { name: "description", content: "Browse and edit historical attendance records for EDVORA COLLEGE classes." },
+      { property: "og:title", content: "Attendance History · EDVORA COLLEGE" },
+      { property: "og:description", content: "Browse and edit historical attendance records for EDVORA COLLEGE classes." },
+      { property: "og:url", content: "https://edvoracollege.lovable.app/history" },
+      { name: "robots", content: "noindex" },
+    ],
+    links: [{ rel: "canonical", href: "https://edvoracollege.lovable.app/history" }],
+  }) });
 
 function HistoryPage() {
   const { attendance, students, batches, courses, deleteAttendanceRecord, updateAttendanceRecord } =
@@ -178,6 +189,7 @@ function HistoryPage() {
                         <Button
                           size="icon"
                           variant="ghost"
+                          aria-label="Delete attendance record"
                           onClick={() => {
                             setRecordToDelete(r.id);
                             setDeleteConfirmationOpen(true);
