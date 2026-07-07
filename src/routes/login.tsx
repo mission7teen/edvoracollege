@@ -14,6 +14,23 @@ import shieldLogo from "@/assets/images/shield_logo_1782228638116.jpg";
 export const Route = createFileRoute("/login")({
   ssr: false,
   component: LoginPage,
+  head: () => ({
+    meta: [
+      { title: "Sign in · EDVORA COLLEGE Staff Portal" },
+      {
+        name: "description",
+        content:
+          "Staff sign-in to the EDVORA COLLEGE attendance management system. Access student, batch, exam and attendance tools.",
+      },
+      { property: "og:title", content: "Sign in · EDVORA COLLEGE Staff Portal" },
+      {
+        property: "og:description",
+        content: "Staff sign-in to the EDVORA COLLEGE attendance management dashboard.",
+      },
+      { property: "og:url", content: "https://edvoracollege.lovable.app/login" },
+    ],
+    links: [{ rel: "canonical", href: "https://edvoracollege.lovable.app/login" }],
+  }),
 });
 
 function LoginPage() {
