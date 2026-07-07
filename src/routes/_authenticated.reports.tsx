@@ -17,7 +17,18 @@ import { attendanceRowsForExport, exportCSV, exportExcel, exportPDF } from "@/li
 import { todayStr } from "@/lib/metrics";
 import { StatusBadge } from "@/components/StatusBadge";
 
-export const Route = createFileRoute("/_authenticated/reports")({ component: ReportsPage });
+export const Route = createFileRoute("/_authenticated/reports")({ component: ReportsPage,
+  head: () => ({
+    meta: [
+      { title: "Reports · EDVORA COLLEGE" },
+      { name: "description", content: "Generate attendance and academic reports for EDVORA COLLEGE." },
+      { property: "og:title", content: "Reports · EDVORA COLLEGE" },
+      { property: "og:description", content: "Generate attendance and academic reports for EDVORA COLLEGE." },
+      { property: "og:url", content: "https://edvoracollege.lovable.app/reports" },
+      { name: "robots", content: "noindex" },
+    ],
+    links: [{ rel: "canonical", href: "https://edvoracollege.lovable.app/reports" }],
+  }) });
 
 type ReportType = "daily" | "weekly" | "monthly" | "student" | "course" | "batch";
 

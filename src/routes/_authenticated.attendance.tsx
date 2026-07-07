@@ -25,7 +25,18 @@ import { cn } from "@/lib/utils";
 import { todayStr } from "@/lib/metrics";
 import { EmptyState } from "@/components/EmptyState";
 
-export const Route = createFileRoute("/_authenticated/attendance")({ component: AttendancePage });
+export const Route = createFileRoute("/_authenticated/attendance")({ component: AttendancePage,
+  head: () => ({
+    meta: [
+      { title: "Mark Attendance · EDVORA COLLEGE" },
+      { name: "description", content: "Mark and save daily class attendance for EDVORA COLLEGE students and sync to Google Sheets." },
+      { property: "og:title", content: "Mark Attendance · EDVORA COLLEGE" },
+      { property: "og:description", content: "Mark and save daily class attendance for EDVORA COLLEGE students and sync to Google Sheets." },
+      { property: "og:url", content: "https://edvoracollege.lovable.app/attendance" },
+      { name: "robots", content: "noindex" },
+    ],
+    links: [{ rel: "canonical", href: "https://edvoracollege.lovable.app/attendance" }],
+  }) });
 
 const statusConfig: {
   value: AttendanceStatus;

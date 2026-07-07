@@ -46,6 +46,17 @@ import type { Course } from "@/lib/types";
 
 export const Route = createFileRoute("/_authenticated/subjects")({
   component: SubjectsPage,
+  head: () => ({
+    meta: [
+      { title: "Subjects · EDVORA COLLEGE" },
+      { name: "description", content: "Manage subjects and courses offered at EDVORA COLLEGE." },
+      { property: "og:title", content: "Subjects · EDVORA COLLEGE" },
+      { property: "og:description", content: "Manage subjects and courses offered at EDVORA COLLEGE." },
+      { property: "og:url", content: "https://edvoracollege.lovable.app/subjects" },
+      { name: "robots", content: "noindex" },
+    ],
+    links: [{ rel: "canonical", href: "https://edvoracollege.lovable.app/subjects" }],
+  }),
 });
 
 interface SubjectRow {

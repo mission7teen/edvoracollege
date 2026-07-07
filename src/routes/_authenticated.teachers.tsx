@@ -36,7 +36,18 @@ import { useData } from "@/lib/store";
 import type { Teacher } from "@/lib/types";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/teachers")({ component: TeachersPage });
+export const Route = createFileRoute("/_authenticated/teachers")({ component: TeachersPage,
+  head: () => ({
+    meta: [
+      { title: "Teachers · EDVORA COLLEGE" },
+      { name: "description", content: "Manage teaching staff and assigned subjects at EDVORA COLLEGE." },
+      { property: "og:title", content: "Teachers · EDVORA COLLEGE" },
+      { property: "og:description", content: "Manage teaching staff and assigned subjects at EDVORA COLLEGE." },
+      { property: "og:url", content: "https://edvoracollege.lovable.app/teachers" },
+      { name: "robots", content: "noindex" },
+    ],
+    links: [{ rel: "canonical", href: "https://edvoracollege.lovable.app/teachers" }],
+  }) });
 
 const empty: Omit<Teacher, "id"> & { subjectIds?: string[] } = {
   fullName: "",

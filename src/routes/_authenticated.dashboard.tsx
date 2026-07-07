@@ -39,6 +39,17 @@ import {
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
+  head: () => ({
+    meta: [
+      { title: "Dashboard · EDVORA COLLEGE" },
+      { name: "description", content: "Attendance overview, today's presence, monthly trends and top performers for EDVORA COLLEGE." },
+      { property: "og:title", content: "Dashboard · EDVORA COLLEGE" },
+      { property: "og:description", content: "Attendance overview, today's presence, monthly trends and top performers for EDVORA COLLEGE." },
+      { property: "og:url", content: "https://edvoracollege.lovable.app/dashboard" },
+      { name: "robots", content: "noindex" },
+    ],
+    links: [{ rel: "canonical", href: "https://edvoracollege.lovable.app/dashboard" }],
+  }),
 });
 
 function DashboardPage() {

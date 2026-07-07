@@ -56,6 +56,17 @@ import { studentRate } from "@/lib/metrics";
 
 export const Route = createFileRoute("/_authenticated/students")({
   component: StudentsPage,
+  head: () => ({
+    meta: [
+      { title: "Students · EDVORA COLLEGE" },
+      { name: "description", content: "Manage EDVORA COLLEGE student records, profiles, batches and QR passes." },
+      { property: "og:title", content: "Students · EDVORA COLLEGE" },
+      { property: "og:description", content: "Manage EDVORA COLLEGE student records, profiles, batches and QR passes." },
+      { property: "og:url", content: "https://edvoracollege.lovable.app/students" },
+      { name: "robots", content: "noindex" },
+    ],
+    links: [{ rel: "canonical", href: "https://edvoracollege.lovable.app/students" }],
+  }),
 });
 
 const empty: Omit<Student, "id" | "registrationDate"> = {
