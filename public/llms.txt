@@ -1,0 +1,11 @@
+# EDVORA COLLEGE
+
+> Staff-facing student attendance management system for EDVORA COLLEGE — an A/L Commerce college in Sri Lanka. Public surface is limited to marketing, sign-in and guides; classroom tools live behind staff authentication.
+
+## Pages
+
+- [Sign in](/login): Staff sign-in to the attendance dashboard.
+
+## Guides
+
+- [Automated Attendance Sheets Guide](/guides/attendance-sheets): How to replace paper attendance registers with an automated system that syncs to Google Sheets.
