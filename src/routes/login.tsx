@@ -77,7 +77,7 @@ function LoginPage() {
           className="relative flex items-center gap-3"
         >
           <div className="w-11 h-11 rounded-xl overflow-hidden bg-white/15 backdrop-blur grid place-items-center">
-            <img src={shieldLogo} alt="EDVORA" className="w-full h-full object-cover" />
+            <img src={shieldLogo} alt="EDVORA COLLEGE Logo" className="w-full h-full object-cover" />
           </div>
           <div>
             <div className="font-bold tracking-tight text-lg">EDVORA COLLEGE</div>
@@ -118,7 +118,7 @@ function LoginPage() {
         >
           <div className="lg:hidden flex items-center gap-3 mb-6">
             <div className="w-11 h-11 rounded-xl overflow-hidden grid place-items-center">
-              <img src={shieldLogo} alt="EDVORA" className="w-full h-full object-cover" />
+              <img src={shieldLogo} alt="EDVORA COLLEGE Logo" className="w-full h-full object-cover" />
             </div>
             <div>
               <div className="font-bold tracking-tight">EDVORA COLLEGE</div>
