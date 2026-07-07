@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /attendance
+Disallow: /students
+Disallow: /batches
+Disallow: /exams
+Disallow: /teachers
+Disallow: /subjects
+Disallow: /settings
+Disallow: /history
+Disallow: /payments
+Disallow: /reports
+Disallow: /analytics
+Disallow: /checkin/
+
+Sitemap: https://edvoracollege.lovable.app/sitemap.xml
