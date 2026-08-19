@@ -61,6 +61,23 @@ export interface CollegeSettings {
   address: string;
   academicYear: string;
   attendanceThreshold: number;
+  // General
+  dateFormat?: "YYYY-MM-DD" | "DD/MM/YYYY" | "MM/DD/YYYY";
+  currency?: string;
+  weekStart?: "Monday" | "Sunday";
+  timezone?: string;
+  // Notifications
+  smsEnabled?: boolean;
+  smsSenderId?: string;
+  smsAbsentOnly?: boolean;
+  smsTemplate?: string;
+  sheetsEnabled?: boolean;
+  // Appearance
+  density?: "comfortable" | "compact";
+  // Users & roles (staff directory managed in-app)
+  staff?: { email: string; role: "Admin" | "Teacher" | "Viewer" }[];
+  // Audit trail
+  auditLog?: { at: string; actor: string; action: string }[];
 }
 
 export interface Teacher {
