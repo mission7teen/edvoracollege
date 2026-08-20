@@ -64,21 +64,30 @@ export const Route = createFileRoute("/_authenticated/settings")({
 });
 
 const SECTIONS = [
-  { id: "college", label: "College Information", icon: Building2 },
-  { id: "general", label: "General Settings", icon: Globe },
-  { id: "profile", label: "User Profile", icon: User },
-  { id: "security", label: "Account Security", icon: Lock },
-  { id: "roles", label: "Users & Roles", icon: Users },
-  { id: "notifications", label: "Notifications", icon: MessageSquare },
-  { id: "appearance", label: "Appearance", icon: Palette },
-  { id: "backup", label: "Backup & Restore", icon: DatabaseBackup },
-  { id: "audit", label: "Audit Logs", icon: ScrollText },
+  { id: "college", label: "College Information", icon: Building2, adminOnly: false },
+  { id: "general", label: "General Settings", icon: Globe, adminOnly: false },
+  { id: "profile", label: "User Profile", icon: User, adminOnly: false },
+  { id: "security", label: "Account Security", icon: Lock, adminOnly: false },
+  { id: "roles", label: "Users & Roles", icon: Users, adminOnly: true },
+  { id: "notifications", label: "Notifications", icon: MessageSquare, adminOnly: false },
+  { id: "appearance", label: "Appearance", icon: Palette, adminOnly: false },
+  { id: "backup", label: "Backup & Restore", icon: DatabaseBackup, adminOnly: true },
+  { id: "audit", label: "Audit Logs", icon: ScrollText, adminOnly: true },
 ] as const;
 
 type SectionId = (typeof SECTIONS)[number]["id"];
 
 function SettingsPage() {
   const [active, setActive] = useState<SectionId>("college");
+  const { isAdmin, loading: roleLoading } = useRole();
+
+  const visible = SECTIONS.filter((s) => !s.adminOnly || isAdmin || roleLoading);
+  const activeSection = SECTIONS.find((s) => s.id === active);
+  const blocked = !roleLoading && !isAdmin && !!activeSection?.adminOnly;
+
+  useEffect(() => {
+    if (blocked) setActive("college");
+  }, [blocked]);
 
   return (
     <AppShell title="Settings" subtitle="System command center and configuration">
@@ -89,11 +98,18 @@ function SettingsPage() {
           className="glass-card rounded-2xl p-3 lg:sticky lg:top-4"
           aria-label="Settings sections"
         >
-          <p className="px-3 py-2 text-[11px] font-bold tracking-widest text-muted-foreground">
-            CONFIGURATION
-          </p>
+          <div className="px-3 py-2 flex items-center justify-between">
+            <p className="text-[11px] font-bold tracking-widest text-muted-foreground">
+              CONFIGURATION
+            </p>
+            {!roleLoading && (
+              <Badge variant={isAdmin ? "default" : "secondary"} className="text-[10px]">
+                {isAdmin ? "Admin" : "Staff"}
+              </Badge>
+            )}
+          </div>
           <div className="space-y-1">
-            {SECTIONS.map((s) => {
+            {visible.map((s) => {
               const Icon = s.icon;
               const on = active === s.id;
               return (
@@ -109,6 +125,9 @@ function SettingsPage() {
                 >
                   <Icon size={17} />
                   {s.label}
+                  {s.adminOnly && (
+                    <ShieldCheck size={13} className="ml-auto opacity-70" aria-hidden />
+                  )}
                 </button>
               );
             })}
@@ -121,20 +140,42 @@ function SettingsPage() {
           animate={{ opacity: 1, y: 0 }}
           className="space-y-4"
         >
-          {active === "college" && <CollegeSection />}
-          {active === "general" && <GeneralSection />}
-          {active === "profile" && <ProfileSection />}
-          {active === "security" && <SecuritySection />}
-          {active === "roles" && <RolesSection />}
-          {active === "notifications" && <NotificationsSection />}
-          {active === "appearance" && <AppearanceSection />}
-          {active === "backup" && <BackupSection />}
-          {active === "audit" && <AuditSection />}
+          {blocked ? (
+            <AdminOnlyNotice />
+          ) : (
+            <>
+              {active === "college" && <CollegeSection />}
+              {active === "general" && <GeneralSection />}
+              {active === "profile" && <ProfileSection />}
+              {active === "security" && <SecuritySection />}
+              {active === "roles" && isAdmin && <RolesSection />}
+              {active === "notifications" && <NotificationsSection />}
+              {active === "appearance" && <AppearanceSection />}
+              {active === "backup" && isAdmin && <BackupSection />}
+              {active === "audit" && isAdmin && <AuditSection />}
+            </>
+          )}
         </motion.section>
       </div>
     </AppShell>
   );
 }
+
+function AdminOnlyNotice() {
+  return (
+    <Card
+      title="Administrator access required"
+      desc="This section contains sensitive configuration and is restricted to admins."
+      icon={ShieldAlert}
+    >
+      <p className="text-sm text-muted-foreground">
+        Ask an administrator to grant you the Admin role if you need access to Users &amp; Roles,
+        Backup &amp; Restore or Audit Logs.
+      </p>
+    </Card>
+  );
+}
+
 
 /* ---------------- shared helpers ---------------- */
 
