@@ -29,6 +29,18 @@ export function AppShell({
   const setTheme = useData((s) => s.setTheme);
   const settings = useData((s) => s.settings);
   const [open, setOpen] = useState(false);
+  const username = useAuth((s) => s.username);
+  const logout = useAuth((s) => s.logout);
+  const navigate = useNavigate();
+  const goSettings = (hash: string) => {
+    navigate({ to: "/settings", hash });
+  };
+  const initials = (settings.name || "Edvora College")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase())
+    .join("");
 
   useEffect(() => {
     if (typeof document === "undefined") return;
