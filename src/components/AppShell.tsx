@@ -1,9 +1,18 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Sidebar } from "./Sidebar";
-import { Bell, Menu, Moon, Search, Sun } from "lucide-react";
-import { useData } from "@/lib/store";
+import { Bell, Menu, Moon, Search, Sun, User, Lock, KeyRound, Palette, MessageSquare, LogOut } from "lucide-react";
+import { useData, useAuth } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { useNavigate } from "@tanstack/react-router";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function AppShell({
   children,
