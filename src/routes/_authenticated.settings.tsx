@@ -84,6 +84,11 @@ function SettingsPage() {
   const [active, setActive] = useState<SectionId>("college");
   const { isAdmin, loading: roleLoading } = useRole();
 
+  useEffect(() => {
+    const h = typeof window !== "undefined" ? window.location.hash.replace("#", "") : "";
+    if (h && SECTIONS.some((s) => s.id === h)) setActive(h as SectionId);
+  }, []);
+
   const visible = SECTIONS.filter((s) => !s.adminOnly || isAdmin || roleLoading);
   const activeSection = SECTIONS.find((s) => s.id === active);
   const blocked = !roleLoading && !isAdmin && !!activeSection?.adminOnly;
