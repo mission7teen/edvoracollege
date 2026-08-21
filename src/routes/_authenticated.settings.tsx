@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouterState } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { AppShell } from "@/components/AppShell";
@@ -84,10 +84,12 @@ function SettingsPage() {
   const [active, setActive] = useState<SectionId>("college");
   const { isAdmin, loading: roleLoading } = useRole();
 
+  const hash = useRouterState({ select: (s) => s.location.hash });
+
   useEffect(() => {
-    const h = typeof window !== "undefined" ? window.location.hash.replace("#", "") : "";
+    const h = (hash || "").replace("#", "");
     if (h && SECTIONS.some((s) => s.id === h)) setActive(h as SectionId);
-  }, []);
+  }, [hash]);
 
   const visible = SECTIONS.filter((s) => !s.adminOnly || isAdmin || roleLoading);
   const activeSection = SECTIONS.find((s) => s.id === active);
