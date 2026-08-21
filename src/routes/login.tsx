@@ -238,6 +238,7 @@ function LoginPage() {
           </div>
         </motion.form>
       </div>
+      <InstallPrompt />
     </div>
   );
 }
