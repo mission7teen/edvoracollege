@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/store";
 import { lovable } from "@/integrations/lovable/index";
+import { InstallPrompt } from "@/components/InstallPrompt";
 import shieldLogo from "@/assets/images/shield_logo_1782228638116.jpg";
 
 export const Route = createFileRoute("/login")({
