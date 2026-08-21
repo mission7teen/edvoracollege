@@ -115,12 +115,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:description", content: "We transform classroom learning into real-world knowledge, skills, and success. professional careers in accounting, finance, and business. Business Studies, ..." },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/20dc2e33-1872-4938-9e66-4f237fdff157/id-preview-70894985--8616fed7-6ddf-4191-aaff-e09e16684476.lovable.app-1782286003119.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/20dc2e33-1872-4938-9e66-4f237fdff157/id-preview-70894985--8616fed7-6ddf-4191-aaff-e09e16684476.lovable.app-1782286003119.png" },
+      { name: "theme-color", content: "#1e4fd8" },
+      { name: "msapplication-TileColor", content: "#1e4fd8" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+      { name: "apple-mobile-web-app-title", content: "EDVORA COLLEGE" },
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
       },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
+      { rel: "icon", type: "image/png", sizes: "192x192", href: "/icon-192x192.png" },
+      { rel: "icon", type: "image/png", sizes: "512x512", href: "/icon-512x512.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
