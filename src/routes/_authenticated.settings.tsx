@@ -107,7 +107,10 @@ function SettingsPage() {
           id="settings-configuration-nav"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass-card rounded-2xl p-3 lg:sticky lg:top-4"
+          className={cn(
+            "glass-card rounded-2xl p-3 lg:sticky lg:top-4",
+            active !== "college" && "hidden lg:block"
+          )}
           aria-label="Settings sections"
         >
           <div className="px-3 py-2 flex items-center justify-between">
