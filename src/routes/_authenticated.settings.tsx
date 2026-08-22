@@ -49,6 +49,7 @@ import {
   Download,
   ShieldCheck,
   ShieldAlert,
+  ChevronLeft,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/settings")({
