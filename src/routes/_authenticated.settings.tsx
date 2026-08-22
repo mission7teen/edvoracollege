@@ -31,6 +31,7 @@ import { exportCSV, exportJSON } from "@/lib/exporters";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useRole } from "@/hooks/use-role";
+import { cn } from "@/lib/utils";
 import type { CollegeSettings } from "@/lib/types";
 import {
   Building2,
@@ -107,7 +108,10 @@ function SettingsPage() {
           id="settings-configuration-nav"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass-card rounded-2xl p-3 lg:sticky lg:top-4"
+          className={cn(
+            "glass-card rounded-2xl p-3 lg:sticky lg:top-4",
+            active !== "college" && "hidden lg:block"
+          )}
           aria-label="Settings sections"
         >
           <div className="px-3 py-2 flex items-center justify-between">
@@ -154,10 +158,7 @@ function SettingsPage() {
         >
           {active !== "college" && (
             <button
-              onClick={() => {
-                const nav = document.getElementById("settings-configuration-nav");
-                nav?.scrollIntoView({ behavior: "smooth", block: "start" });
-              }}
+              onClick={() => setActive("college")}
               className="lg:hidden inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-colors"
               aria-label="Back to configuration"
             >
