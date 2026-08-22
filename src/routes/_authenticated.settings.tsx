@@ -49,6 +49,7 @@ import {
   Download,
   ShieldCheck,
   ShieldAlert,
+  ChevronLeft,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/settings")({
@@ -103,6 +104,7 @@ function SettingsPage() {
     <AppShell title="Settings" subtitle="System command center and configuration">
       <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4 items-start">
         <motion.nav
+          id="settings-configuration-nav"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           className="glass-card rounded-2xl p-3 lg:sticky lg:top-4"
@@ -150,6 +152,19 @@ function SettingsPage() {
           animate={{ opacity: 1, y: 0 }}
           className="space-y-4"
         >
+          {active !== "college" && (
+            <button
+              onClick={() => {
+                const nav = document.getElementById("settings-configuration-nav");
+                nav?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+              className="lg:hidden inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-colors"
+              aria-label="Back to configuration"
+            >
+              <ChevronLeft size={16} />
+              Back to Configuration
+            </button>
+          )}
           {blocked ? (
             <AdminOnlyNotice />
           ) : (
