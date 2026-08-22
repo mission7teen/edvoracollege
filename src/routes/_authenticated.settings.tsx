@@ -104,6 +104,7 @@ function SettingsPage() {
     <AppShell title="Settings" subtitle="System command center and configuration">
       <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4 items-start">
         <motion.nav
+          id="settings-configuration-nav"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           className="glass-card rounded-2xl p-3 lg:sticky lg:top-4"
