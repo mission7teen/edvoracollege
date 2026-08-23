@@ -31,6 +31,12 @@ import { exportCSV, exportJSON } from "@/lib/exporters";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useRole } from "@/hooks/use-role";
+import {
+  listUserRoles,
+  createStaffAccount,
+  setUserRole,
+  removeUserRoles,
+} from "@/lib/roles.functions";
 import { cn } from "@/lib/utils";
 import type { CollegeSettings } from "@/lib/types";
 import {
@@ -526,26 +532,65 @@ function SecuritySection() {
 }
 
 function RolesSection() {
-  const { form, setForm, save } = useSettingsForm();
   const { username } = useAuth();
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<"Admin" | "Teacher" | "Viewer">("Teacher");
-  const staff = form.staff ?? [];
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState<"admin" | "staff">("staff");
+  const [users, setUsers] = useState<
+    { id: string; email: string; createdAt: string; roles: string[] }[]
+  >([]);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
 
-  const add = () => {
-    if (!/^\S+@\S+\.\S+$/.test(email)) return toast.error("Enter a valid email");
-    if (staff.some((s) => s.email.toLowerCase() === email.toLowerCase()))
-      return toast.error("That email is already listed");
-    const next = [...staff, { email, role }];
-    setForm({ ...form, staff: next });
-    save(`Assigned ${role} role to ${email}`, { staff: next });
-    setEmail("");
+  const load = async () => {
+    setLoading(true);
+    try {
+      const rows = await listUserRoles();
+      setUsers(rows as any);
+    } catch (e: any) {
+      toast.error(e?.message || "Could not load users");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const remove = (e: string) => {
-    const next = staff.filter((s) => s.email !== e);
-    setForm({ ...form, staff: next });
-    save(`Removed role for ${e}`, { staff: next });
+  useEffect(() => {
+    load();
+  }, []);
+
+  const add = async () => {
+    setBusy(true);
+    try {
+      await createStaffAccount({ data: { email, password, role } });
+      toast.success("Account created");
+      setEmail("");
+      setPassword("");
+      await load();
+    } catch (e: any) {
+      toast.error(e?.message || "Could not create account");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const changeRole = async (userId: string, next: "admin" | "staff") => {
+    try {
+      await setUserRole({ data: { userId, role: next } });
+      toast.success("Role updated");
+      await load();
+    } catch (e: any) {
+      toast.error(e?.message || "Could not update role");
+    }
+  };
+
+  const revoke = async (userId: string) => {
+    try {
+      await removeUserRoles({ data: { userId } });
+      toast.success("Roles removed");
+      await load();
+    } catch (e: any) {
+      toast.error(e?.message || "Could not remove roles");
+    }
   };
 
   return (
@@ -556,39 +601,58 @@ function RolesSection() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
+        <Input
+          type="password"
+          placeholder="Temp password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="sm:w-48"
+        />
         <Select value={role} onValueChange={(v) => setRole(v as typeof role)}>
-          <SelectTrigger className="sm:w-40"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="sm:w-32"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="Admin">Admin</SelectItem>
-            <SelectItem value="Teacher">Teacher</SelectItem>
-            <SelectItem value="Viewer">Viewer</SelectItem>
+            <SelectItem value="admin">Admin</SelectItem>
+            <SelectItem value="staff">Staff</SelectItem>
           </SelectContent>
         </Select>
-        <Button onClick={add} className="gradient-primary text-primary-foreground">
+        <Button
+          onClick={add}
+          disabled={busy}
+          className="gradient-primary text-primary-foreground"
+        >
           <Plus size={15} /> Add
         </Button>
       </div>
       <div className="space-y-2">
-        <div className="flex items-center justify-between text-sm border-b border-border pb-2">
-          <span className="font-medium">{username}</span>
-          <Badge>Signed in</Badge>
-        </div>
-        {staff.length === 0 && (
-          <p className="text-xs text-muted-foreground">No additional staff listed yet.</p>
+        {loading && <p className="text-xs text-muted-foreground">Loading accounts…</p>}
+        {!loading && users.length === 0 && (
+          <p className="text-xs text-muted-foreground">No accounts found.</p>
         )}
-        {staff.map((s) => (
+        {users.map((u) => (
           <div
-            key={s.email}
-            className="flex items-center justify-between text-sm border-b border-border pb-2 last:border-0"
+            key={u.id}
+            className="flex items-center justify-between gap-2 text-sm border-b border-border pb-2 last:border-0"
           >
-            <span>{s.email}</span>
+            <span className="truncate">
+              {u.email}
+              {u.email === username && <Badge className="ml-2">You</Badge>}
+            </span>
             <div className="flex items-center gap-2">
-              <Badge variant="secondary">{s.role}</Badge>
+              <Select
+                value={(u.roles[0] as "admin" | "staff") || "staff"}
+                onValueChange={(v) => changeRole(u.id, v as "admin" | "staff")}
+              >
+                <SelectTrigger className="h-8 w-28"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="staff">Staff</SelectItem>
+                </SelectContent>
+              </Select>
               <Button
                 size="icon"
                 variant="ghost"
-                aria-label={`Remove ${s.email}`}
-                onClick={() => remove(s.email)}
+                aria-label={`Remove roles for ${u.email}`}
+                onClick={() => revoke(u.id)}
               >
                 <Trash2 size={15} />
               </Button>
@@ -597,12 +661,13 @@ function RolesSection() {
         ))}
       </div>
       <p className="text-xs text-muted-foreground">
-        Accounts themselves are created by an administrator in the backend; this list controls the
-        role each staff email is assigned.
+        Accounts and roles are stored in the backend database. Public sign-ups stay disabled — only
+        an administrator can create accounts here.
       </p>
     </Card>
   );
 }
+
 
 function NotificationsSection() {
   const { form, setForm, save } = useSettingsForm();
