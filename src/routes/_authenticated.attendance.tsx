@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { Check, ClipboardCheck, Save, X, Sheet as SheetIcon, QrCode, Nfc } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { saveAttendanceToSheets } from "@/lib/sheets.functions";
-import { sendAttendanceSMS } from "@/lib/sms.functions";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { QRScanner } from "@/components/QRScanner";
