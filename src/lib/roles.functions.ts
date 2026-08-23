@@ -1,13 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { assertAdmin } from "./roles.server";
 
 export type AppRoleValue = "admin" | "staff";
 
-async function assertAdmin(context: any) {
-  const { data, error } = await context.supabase.rpc("is_admin");
-  if (error) throw new Error(error.message);
-  if (!data) throw new Error("Admin access required");
-}
 
 /** List every auth user with the roles assigned in the user_roles table. */
 export const listUserRoles = createServerFn({ method: "GET" })
