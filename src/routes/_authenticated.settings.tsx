@@ -672,19 +672,17 @@ function RolesSection() {
 function NotificationsSection() {
   const { form, setForm, save } = useSettingsForm();
   return (
-    <Card title="Notifications" desc="Parent SMS alerts and spreadsheet sync." icon={MessageSquare}>
+    <Card
+      title="Notifications"
+      desc="WhatsApp absentee alerts and spreadsheet sync."
+      icon={MessageSquare}
+    >
       <div className="space-y-3">
         <Toggle
-          label="SMS to parents on attendance save"
-          desc="Sends an attendance alert to each student's guardian number."
-          checked={form.smsEnabled ?? true}
-          onChange={(v) => setForm({ ...form, smsEnabled: v })}
-        />
-        <Toggle
-          label="Only notify for absent students"
-          desc="Skip SMS for present students to reduce cost."
-          checked={form.smsAbsentOnly ?? false}
-          onChange={(v) => setForm({ ...form, smsAbsentOnly: v })}
+          label="WhatsApp absentee list on attendance save"
+          desc="Opens WhatsApp with a ready-made message listing absent students."
+          checked={form.whatsappEnabled ?? true}
+          onChange={(v) => setForm({ ...form, whatsappEnabled: v })}
         />
         <Toggle
           label="Sync attendance to Google Sheets"
@@ -693,21 +691,23 @@ function NotificationsSection() {
         />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <F label="SMS sender ID">
+        <F label="WhatsApp receiver ID">
           <Input
-            value={form.smsSenderId ?? "94716126128"}
-            onChange={(e) => setForm({ ...form, smsSenderId: e.target.value })}
+            placeholder="94777583711"
+            value={form.whatsappReceiver ?? "94777583711"}
+            onChange={(e) => setForm({ ...form, whatsappReceiver: e.target.value })}
           />
         </F>
         <div className="sm:col-span-2">
           <F label="Message template">
             <Textarea
               rows={3}
-              placeholder="Dear parent, {student} was marked {status} on {date}."
+              placeholder="Absent students for {subject} — {batch} on {date}:"
               value={
-                form.smsTemplate ?? "Dear parent, {student} was marked {status} on {date}. - EDVORA COLLEGE"
+                form.whatsappTemplate ??
+                "Absent students for {subject} — {batch} on {date}: - EDVORA COLLEGE"
               }
-              onChange={(e) => setForm({ ...form, smsTemplate: e.target.value })}
+              onChange={(e) => setForm({ ...form, whatsappTemplate: e.target.value })}
             />
           </F>
         </div>
