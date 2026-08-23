@@ -31,6 +31,12 @@ import { exportCSV, exportJSON } from "@/lib/exporters";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useRole } from "@/hooks/use-role";
+import {
+  listUserRoles,
+  createStaffAccount,
+  setUserRole,
+  removeUserRoles,
+} from "@/lib/roles.functions";
 import { cn } from "@/lib/utils";
 import type { CollegeSettings } from "@/lib/types";
 import {
