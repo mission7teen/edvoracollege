@@ -67,10 +67,9 @@ export interface CollegeSettings {
   weekStart?: "Monday" | "Sunday";
   timezone?: string;
   // Notifications
-  smsEnabled?: boolean;
-  smsSenderId?: string;
-  smsAbsentOnly?: boolean;
-  smsTemplate?: string;
+  whatsappEnabled?: boolean;
+  whatsappReceiver?: string;
+  whatsappTemplate?: string;
   sheetsEnabled?: boolean;
   // Appearance
   density?: "comfortable" | "compact";
