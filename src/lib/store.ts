@@ -478,6 +478,10 @@ export const useData = create<DataState>()(
         // wipe cloud then re-seed
         await Promise.all([
           supabase.from("attendance").delete().neq("id", ""),
+          supabase.from("exam_marks").delete().neq("id", ""),
+          supabase.from("exams").delete().neq("id", ""),
+          supabase.from("student_payments").delete().neq("id", ""),
+          supabase.from("payment_packages").delete().neq("id", ""),
           supabase.from("students").delete().neq("id", ""),
           supabase.from("teachers").delete().neq("id", ""),
           supabase.from("batches").delete().neq("id", ""),
