@@ -57,6 +57,7 @@ function AttendancePage() {
     saveAttendance,
     subjectSheetIds,
     setSubjectSheetId,
+    settings,
   } = useData();
   const [courseId, setCourseId] = useState<string>(courses[0]?.id ?? "");
   const [batchId, setBatchId] = useState<string>("");
