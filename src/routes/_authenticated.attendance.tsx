@@ -69,8 +69,6 @@ function AttendancePage() {
   const [nfcActive, setNfcActive] = useState(false);
   const nfcAbortRef = useRef<AbortController | null>(null);
   const saveToSheetsFn = useServerFn(saveAttendanceToSheets);
-  const sendSMSFn = useServerFn(sendAttendanceSMS);
-  const notifyParents = true;
 
   const courseBatches = batches;
   const subjectTeachers = useMemo(
