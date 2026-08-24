@@ -229,40 +229,31 @@ function AttendancePage() {
     setMarks({});
     toast.success(`Attendance saved for ${roster.length} students`);
 
-    if (notifyParents) {
-      const subject = courses.find((c) => c.id === courseId);
-      const batch = batches.find((b) => b.id === batchId);
-      const recipients = roster
-        .filter((s) => (s.guardianPhone || "").trim().length > 0)
-        .map((s) => ({
-          studentName: s.fullName,
-          studentCode: s.studentId,
-          guardianName: s.guardianName,
-          guardianPhone: s.guardianPhone,
-          status: final[s.id],
-        }));
-      if (!recipients.length) {
-        toast.info("No parent phone numbers on file — skipped SMS notifications.");
+    if (settings.whatsappEnabled ?? true) {
+      const receiver = (settings.whatsappReceiver ?? "94777583711").replace(/\D/g, "");
+      if (!receiver) {
+        toast.info("Add a WhatsApp receiver ID in Settings → Notifications.");
         return;
       }
-      toast.info(`Sending SMS to ${recipients.length} parents…`);
-      sendSMSFn({
-        data: {
-          date,
-          batchName: batch?.name ?? "",
-          subjectName: subject?.name ?? "",
-          collegeName: "EDVORA COLLEGE",
-          sender: "94716126128",
-          recipients,
-        },
-      })
-        .then((res) => {
-          toast.success(
-            `SMS: ${res.sent} sent · ${res.skipped} skipped · ${res.failed} failed`,
-          );
-          if (res.errors?.length) console.warn("SMS errors:", res.errors);
-        })
-        .catch((e: Error) => toast.error(`SMS failed: ${e.message}`));
+      const subject = courses.find((c) => c.id === courseId);
+      const batch = batches.find((b) => b.id === batchId);
+      const absentees = roster.filter((s) => final[s.id] === "Absent");
+      const header = (
+        settings.whatsappTemplate ??
+        "Absent students for {subject} — {batch} on {date}: - EDVORA COLLEGE"
+      )
+        .replace(/{subject}/g, subject?.name ?? "")
+        .replace(/{batch}/g, batch?.name ?? "")
+        .replace(/{date}/g, date);
+      const body = absentees.length
+        ? absentees.map((s, i) => `${i + 1}. ${s.fullName} (${s.studentId})`).join("\n")
+        : "No absentees today.";
+      const text = `${header}\n\n${body}`;
+      window.open(
+        `https://wa.me/${receiver}?text=${encodeURIComponent(text)}`,
+        "_blank",
+        "noopener,noreferrer",
+      );
     }
   }
 
