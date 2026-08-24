@@ -23,6 +23,15 @@ export const listUserRoles = createServerFn({ method: "GET" })
       .select("id, user_id, role");
     if (rErr) throw new Error(rErr.message);
 
+    const { data: accessRows } = await supabaseAdmin
+      .from("user_access")
+      .select("user_id, role_id");
+
+    const accessByUser = new Map<string, string>();
+    for (const a of accessRows ?? []) {
+      if (a.role_id) accessByUser.set(a.user_id, a.role_id);
+    }
+
     const byUser = new Map<string, string[]>();
     for (const r of roleRows ?? []) {
       byUser.set(r.user_id, [...(byUser.get(r.user_id) ?? []), r.role as string]);
@@ -31,10 +40,49 @@ export const listUserRoles = createServerFn({ method: "GET" })
     return (usersRes?.users ?? []).map((u) => ({
       id: u.id,
       email: u.email ?? "",
+      fullName: ((u.user_metadata ?? {}) as Record<string, string>)["full_name"] ?? "",
       createdAt: u.created_at ?? "",
       roles: byUser.get(u.id) ?? [],
+      accessRoleId: accessByUser.get(u.id) ?? null,
     }));
   });
+
+/** Assign a custom access role (page permissions) to a user. */
+export const assignAccessRole = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { userId: string; roleId: string }) => {
+    const userId = String(input?.userId ?? "");
+    const roleId = String(input?.roleId ?? "").trim();
+    if (!/^[0-9a-fA-F-]{36}$/.test(userId)) throw new Error("Invalid user");
+    if (!roleId) throw new Error("Pick a role");
+    return { userId, roleId };
+  })
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: role, error: roleErr } = await supabaseAdmin
+      .from("app_roles")
+      .select("id, is_admin")
+      .eq("id", data.roleId)
+      .maybeSingle();
+    if (roleErr) throw new Error(roleErr.message);
+    if (!role) throw new Error("Role not found");
+
+    const { error } = await supabaseAdmin
+      .from("user_access")
+      .upsert({ user_id: data.userId, role_id: data.roleId, updated_at: new Date().toISOString() });
+    if (error) throw new Error(error.message);
+
+    // Keep the admin flag (used by RLS) in sync with the assigned role.
+    await supabaseAdmin.from("user_roles").delete().eq("user_id", data.userId);
+    await supabaseAdmin
+      .from("user_roles")
+      .insert({ user_id: data.userId, role: role.is_admin ? "admin" : "staff" });
+
+    return { ok: true };
+  });
+
 
 /** Create a new account (admin only) — public sign-ups stay disabled. */
 export const createStaffAccount = createServerFn({ method: "POST" })
