@@ -27,6 +27,8 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedBatchesRouteImport } from './routes/_authenticated.batches'
 import { Route as AuthenticatedAttendanceRouteImport } from './routes/_authenticated.attendance'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated.analytics'
+import { Route as ApiPublicManifestDotwebmanifestRouteImport } from './routes/api/public/manifest[.]webmanifest'
+import { Route as ApiPublicBrandIconDotpngRouteImport } from './routes/api/public/brand-icon[.]png'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -117,6 +119,18 @@ const AuthenticatedAnalyticsRoute = AuthenticatedAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const ApiPublicManifestDotwebmanifestRoute =
+  ApiPublicManifestDotwebmanifestRouteImport.update({
+    id: '/api/public/manifest.webmanifest',
+    path: '/api/public/manifest.webmanifest',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicBrandIconDotpngRoute =
+  ApiPublicBrandIconDotpngRouteImport.update({
+    id: '/api/public/brand-icon.png',
+    path: '/api/public/brand-icon.png',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -136,6 +150,8 @@ export interface FileRoutesByFullPath {
   '/teachers': typeof AuthenticatedTeachersRoute
   '/checkin/$studentId': typeof CheckinStudentIdRoute
   '/guides/attendance-sheets': typeof GuidesAttendanceSheetsRoute
+  '/api/public/brand-icon.png': typeof ApiPublicBrandIconDotpngRoute
+  '/api/public/manifest.webmanifest': typeof ApiPublicManifestDotwebmanifestRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -155,6 +171,8 @@ export interface FileRoutesByTo {
   '/teachers': typeof AuthenticatedTeachersRoute
   '/checkin/$studentId': typeof CheckinStudentIdRoute
   '/guides/attendance-sheets': typeof GuidesAttendanceSheetsRoute
+  '/api/public/brand-icon.png': typeof ApiPublicBrandIconDotpngRoute
+  '/api/public/manifest.webmanifest': typeof ApiPublicManifestDotwebmanifestRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -176,6 +194,8 @@ export interface FileRoutesById {
   '/_authenticated/teachers': typeof AuthenticatedTeachersRoute
   '/checkin/$studentId': typeof CheckinStudentIdRoute
   '/guides/attendance-sheets': typeof GuidesAttendanceSheetsRoute
+  '/api/public/brand-icon.png': typeof ApiPublicBrandIconDotpngRoute
+  '/api/public/manifest.webmanifest': typeof ApiPublicManifestDotwebmanifestRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -197,6 +217,8 @@ export interface FileRouteTypes {
     | '/teachers'
     | '/checkin/$studentId'
     | '/guides/attendance-sheets'
+    | '/api/public/brand-icon.png'
+    | '/api/public/manifest.webmanifest'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -216,6 +238,8 @@ export interface FileRouteTypes {
     | '/teachers'
     | '/checkin/$studentId'
     | '/guides/attendance-sheets'
+    | '/api/public/brand-icon.png'
+    | '/api/public/manifest.webmanifest'
   id:
     | '__root__'
     | '/'
@@ -236,6 +260,8 @@ export interface FileRouteTypes {
     | '/_authenticated/teachers'
     | '/checkin/$studentId'
     | '/guides/attendance-sheets'
+    | '/api/public/brand-icon.png'
+    | '/api/public/manifest.webmanifest'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -245,6 +271,8 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   CheckinStudentIdRoute: typeof CheckinStudentIdRoute
   GuidesAttendanceSheetsRoute: typeof GuidesAttendanceSheetsRoute
+  ApiPublicBrandIconDotpngRoute: typeof ApiPublicBrandIconDotpngRoute
+  ApiPublicManifestDotwebmanifestRoute: typeof ApiPublicManifestDotwebmanifestRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -375,6 +403,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAnalyticsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/api/public/manifest.webmanifest': {
+      id: '/api/public/manifest.webmanifest'
+      path: '/api/public/manifest.webmanifest'
+      fullPath: '/api/public/manifest.webmanifest'
+      preLoaderRoute: typeof ApiPublicManifestDotwebmanifestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/brand-icon.png': {
+      id: '/api/public/brand-icon.png'
+      path: '/api/public/brand-icon.png'
+      fullPath: '/api/public/brand-icon.png'
+      preLoaderRoute: typeof ApiPublicBrandIconDotpngRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -419,6 +461,8 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   CheckinStudentIdRoute: CheckinStudentIdRoute,
   GuidesAttendanceSheetsRoute: GuidesAttendanceSheetsRoute,
+  ApiPublicBrandIconDotpngRoute: ApiPublicBrandIconDotpngRoute,
+  ApiPublicManifestDotwebmanifestRoute: ApiPublicManifestDotwebmanifestRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
