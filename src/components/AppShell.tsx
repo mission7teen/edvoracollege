@@ -93,9 +93,6 @@ export function AppShell({
             >
               {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
             </Button>
-            <Button variant="ghost" size="icon" aria-label="notifications">
-              <Bell size={18} />
-            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
@@ -106,18 +103,19 @@ export function AppShell({
                     {initials || "EC"}
                   </div>
                   <div className="hidden sm:block text-xs leading-tight text-left">
-                    <div className="font-semibold truncate max-w-[120px]">{settings.name}</div>
-                    <div className="text-muted-foreground">{settings.academicYear}</div>
+                    <div className="font-semibold truncate max-w-[120px]">{displayName}</div>
+                    <div className="text-muted-foreground truncate max-w-[120px]">{username}</div>
                   </div>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64 rounded-2xl p-2">
                 <DropdownMenuLabel className="px-3 py-2">
-                  <div className="text-base font-bold leading-tight truncate">{settings.name}</div>
+                  <div className="text-base font-bold leading-tight truncate">{displayName}</div>
                   <div className="text-sm text-muted-foreground font-normal truncate">
                     {username ?? settings.email}
                   </div>
                 </DropdownMenuLabel>
+
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="py-2.5 text-sm" onSelect={() => goSettings("profile")}>
                   <User size={16} className="mr-2" /> My Profile
