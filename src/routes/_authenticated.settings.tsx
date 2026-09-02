@@ -308,7 +308,104 @@ function SaveBar({ onSave }: { onSave: () => void }) {
 
 /* ---------------- sections ---------------- */
 
+function LogoUploader({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+
+  const pick = async (file: File) => {
+    if (!file.type.startsWith("image/")) return toast.error("Pick an image file");
+    setBusy(true);
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () => reject(new Error("Could not read file"));
+        reader.readAsDataURL(file);
+      });
+      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const el = new Image();
+        el.onload = () => resolve(el);
+        el.onerror = () => reject(new Error("Invalid image"));
+        el.src = dataUrl;
+      });
+      const size = 512;
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Canvas unavailable");
+      const scale = Math.min(img.width, img.height);
+      ctx.drawImage(
+        img,
+        (img.width - scale) / 2,
+        (img.height - scale) / 2,
+        scale,
+        scale,
+        0,
+        0,
+        size,
+        size,
+      );
+      onChange(canvas.toDataURL("image/png"));
+      toast.success("Logo ready — save changes to apply everywhere");
+    } catch (e: any) {
+      toast.error(e?.message || "Could not load image");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <Label className="text-xs">College logo</Label>
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-xl overflow-hidden border border-border grid place-items-center bg-muted">
+          {value ? (
+            <img src={value} alt="College logo preview" className="w-full h-full object-cover" />
+          ) : (
+            <Building2 size={20} className="text-muted-foreground" />
+          )}
+        </div>
+        <div className="flex flex-col gap-2">
+          <Input
+            type="file"
+            accept="image/*"
+            disabled={busy}
+            aria-label="Upload college logo"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) pick(f);
+            }}
+          />
+          <div className="flex gap-2">
+            <Input
+              placeholder="…or paste an image URL"
+              value={value.startsWith("data:") ? "" : value}
+              onChange={(e) => onChange(e.target.value)}
+              className="h-8 text-xs"
+            />
+            {value && (
+              <Button variant="outline" size="sm" onClick={() => onChange("")}>
+                Remove
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+      <p className="text-[11px] text-muted-foreground">
+        Used in the sidebar, reports, the installed app icon and the browser tab icon.
+      </p>
+    </div>
+  );
+}
+
 function CollegeSection() {
+
   const { form, setForm, save } = useSettingsForm();
   return (
     <Card
