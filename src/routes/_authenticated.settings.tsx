@@ -350,14 +350,12 @@ function CollegeSection() {
           </F>
         </div>
         <div className="sm:col-span-2">
-          <F label="Logo URL">
-            <Input
-              placeholder="https://…"
-              value={form.logo}
-              onChange={(e) => setForm({ ...form, logo: e.target.value })}
-            />
-          </F>
+          <LogoUploader
+            value={form.logo}
+            onChange={(logo) => setForm({ ...form, logo })}
+          />
         </div>
+
       </div>
       <SaveBar onSave={() => save("Updated college information")} />
     </Card>
