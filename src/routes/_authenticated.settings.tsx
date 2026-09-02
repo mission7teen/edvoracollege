@@ -636,17 +636,29 @@ function RolesSection() {
   const { username } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"admin" | "staff">("staff");
+  const [newUserRole, setNewUserRole] = useState<string>("staff");
   const [users, setUsers] = useState<
-    { id: string; email: string; createdAt: string; roles: string[] }[]
+    { id: string; email: string; fullName?: string; createdAt: string; roles: string[]; accessRoleId: string | null }[]
   >([]);
+  const [roles, setRoles] = useState<AppRoleRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+
+  // new role draft
+  const [roleName, setRoleName] = useState("");
+  const [rolePages, setRolePages] = useState<string[]>(["dashboard", "attendance"]);
+  const [roleIsAdmin, setRoleIsAdmin] = useState(false);
+
+  const loadRoles = async () => {
+    const { data, error } = await supabase.from("app_roles").select("id, name, pages, is_admin").order("name");
+    if (error) toast.error(error.message);
+    else setRoles((data ?? []) as AppRoleRow[]);
+  };
 
   const load = async () => {
     setLoading(true);
     try {
-      const rows = await listUserRoles();
+      const [rows] = await Promise.all([listUserRoles(), loadRoles()]);
       setUsers(rows as any);
     } catch (e: any) {
       toast.error(e?.message || "Could not load users");
@@ -659,10 +671,48 @@ function RolesSection() {
     load();
   }, []);
 
+  const createRole = async () => {
+    const name = roleName.trim();
+    if (!name) return toast.error("Give the role a name");
+    const id = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const { error } = await supabase.from("app_roles").insert({
+      id,
+      name,
+      pages: roleIsAdmin ? ALL_PAGE_IDS : rolePages,
+      is_admin: roleIsAdmin,
+    });
+    if (error) return toast.error(error.message);
+    toast.success("Role created");
+    setRoleName("");
+    setRolePages(["dashboard", "attendance"]);
+    setRoleIsAdmin(false);
+    await loadRoles();
+  };
+
+  const toggleRolePage = async (r: AppRoleRow, page: string) => {
+    const pages = r.pages.includes(page) ? r.pages.filter((p) => p !== page) : [...r.pages, page];
+    setRoles((prev) => prev.map((x) => (x.id === r.id ? { ...x, pages } : x)));
+    const { error } = await supabase.from("app_roles").update({ pages }).eq("id", r.id);
+    if (error) toast.error(error.message);
+  };
+
+  const deleteRole = async (id: string) => {
+    const { error } = await supabase.from("app_roles").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Role deleted");
+    await load();
+  };
+
   const add = async () => {
     setBusy(true);
     try {
-      await createStaffAccount({ data: { email, password, role } });
+      const picked = roles.find((r) => r.id === newUserRole);
+      await createStaffAccount({
+        data: { email, password, role: picked?.is_admin ? "admin" : "staff" },
+      });
+      const created = (await listUserRoles()) as any[];
+      const user = created.find((u) => u.email === email.trim().toLowerCase());
+      if (user) await assignAccessRole({ data: { userId: user.id, roleId: newUserRole } });
       toast.success("Account created");
       setEmail("");
       setPassword("");
@@ -674,9 +724,9 @@ function RolesSection() {
     }
   };
 
-  const changeRole = async (userId: string, next: "admin" | "staff") => {
+  const changeRole = async (userId: string, roleId: string) => {
     try {
-      await setUserRole({ data: { userId, role: next } });
+      await assignAccessRole({ data: { userId, roleId } });
       toast.success("Role updated");
       await load();
     } catch (e: any) {
@@ -687,7 +737,7 @@ function RolesSection() {
   const revoke = async (userId: string) => {
     try {
       await removeUserRoles({ data: { userId } });
-      toast.success("Roles removed");
+      toast.success("Access revoked");
       await load();
     } catch (e: any) {
       toast.error(e?.message || "Could not remove roles");
@@ -695,79 +745,173 @@ function RolesSection() {
   };
 
   return (
-    <Card title="Users & Roles" desc="Who can access the admin console and at what level." icon={Users}>
-      <div className="flex flex-col sm:flex-row gap-2">
-        <Input
-          placeholder="staff@edvoracollege.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <Input
-          type="password"
-          placeholder="Temp password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="sm:w-48"
-        />
-        <Select value={role} onValueChange={(v) => setRole(v as typeof role)}>
-          <SelectTrigger className="sm:w-32"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="admin">Admin</SelectItem>
-            <SelectItem value="staff">Staff</SelectItem>
-          </SelectContent>
-        </Select>
-        <Button
-          onClick={add}
-          disabled={busy}
-          className="gradient-primary text-primary-foreground"
-        >
-          <Plus size={15} /> Add
-        </Button>
-      </div>
-      <div className="space-y-2">
-        {loading && <p className="text-xs text-muted-foreground">Loading accounts…</p>}
-        {!loading && users.length === 0 && (
-          <p className="text-xs text-muted-foreground">No accounts found.</p>
-        )}
-        {users.map((u) => (
-          <div
-            key={u.id}
-            className="flex items-center justify-between gap-2 text-sm border-b border-border pb-2 last:border-0"
-          >
-            <span className="truncate">
-              {u.email}
-              {u.email === username && <Badge className="ml-2">You</Badge>}
-            </span>
-            <div className="flex items-center gap-2">
-              <Select
-                value={(u.roles[0] as "admin" | "staff") || "staff"}
-                onValueChange={(v) => changeRole(u.id, v as "admin" | "staff")}
-              >
-                <SelectTrigger className="h-8 w-28"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="staff">Staff</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button
-                size="icon"
-                variant="ghost"
-                aria-label={`Remove roles for ${u.email}`}
-                onClick={() => revoke(u.id)}
-              >
-                <Trash2 size={15} />
-              </Button>
-            </div>
+    <>
+      <Card title="Roles & page permissions" desc="Create roles and choose which pages each role can open." icon={ShieldCheck}>
+        <div className="rounded-xl border border-border p-4 space-y-3">
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Input
+              placeholder="Role name (e.g. Teacher)"
+              value={roleName}
+              onChange={(e) => setRoleName(e.target.value)}
+            />
+            <Button onClick={createRole} className="gradient-primary text-primary-foreground">
+              <Plus size={15} /> Create role
+            </Button>
           </div>
-        ))}
-      </div>
-      <p className="text-xs text-muted-foreground">
-        Accounts and roles are stored in the backend database. Public sign-ups stay disabled — only
-        an administrator can create accounts here.
-      </p>
-    </Card>
+          <Toggle
+            label="Full administrator rights"
+            desc="Admins can open every page and manage roles."
+            checked={roleIsAdmin}
+            onChange={setRoleIsAdmin}
+          />
+          {!roleIsAdmin && (
+            <div className="flex flex-wrap gap-2">
+              {APP_PAGES.map((p) => {
+                const on = rolePages.includes(p.id);
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() =>
+                      setRolePages(on ? rolePages.filter((x) => x !== p.id) : [...rolePages, p.id])
+                    }
+                    className={cn(
+                      "px-3 py-1.5 rounded-full text-xs font-medium border transition-colors",
+                      on
+                        ? "gradient-primary text-primary-foreground border-transparent"
+                        : "border-border text-muted-foreground hover:bg-muted",
+                    )}
+                  >
+                    {p.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-3">
+          {roles.map((r) => (
+            <div key={r.id} className="rounded-xl border border-border p-4 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <p className="font-semibold text-sm">{r.name}</p>
+                  {r.is_admin && <Badge className="text-[10px]">Admin</Badge>}
+                </div>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  aria-label={`Delete role ${r.name}`}
+                  onClick={() => deleteRole(r.id)}
+                >
+                  <Trash2 size={15} />
+                </Button>
+              </div>
+              {r.is_admin ? (
+                <p className="text-xs text-muted-foreground">Full access to all pages.</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {APP_PAGES.map((p) => {
+                    const on = r.pages.includes(p.id);
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => toggleRolePage(r, p.id)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-full text-xs font-medium border transition-colors",
+                          on
+                            ? "bg-primary/10 text-primary border-primary/40"
+                            : "border-border text-muted-foreground hover:bg-muted",
+                        )}
+                      >
+                        {p.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card title="Users & Roles" desc="Who can access the console and at what level." icon={Users}>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Input
+            placeholder="staff@edvoracollege.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <Input
+            type="password"
+            placeholder="Temp password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="sm:w-48"
+          />
+          <Select value={newUserRole} onValueChange={setNewUserRole}>
+            <SelectTrigger className="sm:w-40"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {roles.map((r) => (
+                <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button onClick={add} disabled={busy} className="gradient-primary text-primary-foreground">
+            <Plus size={15} /> Add
+          </Button>
+        </div>
+        <div className="space-y-2">
+          {loading && <p className="text-xs text-muted-foreground">Loading accounts…</p>}
+          {!loading && users.length === 0 && (
+            <p className="text-xs text-muted-foreground">No accounts found.</p>
+          )}
+          {users.map((u) => (
+            <div
+              key={u.id}
+              className="flex items-center justify-between gap-2 text-sm border-b border-border pb-2 last:border-0"
+            >
+              <span className="truncate">
+                <span className="font-medium">{u.fullName || u.email}</span>
+                {u.fullName && (
+                  <span className="block text-xs text-muted-foreground truncate">{u.email}</span>
+                )}
+                {u.email === username && <Badge className="ml-2">You</Badge>}
+              </span>
+              <div className="flex items-center gap-2">
+                <Select
+                  value={u.accessRoleId ?? (u.roles.includes("admin") ? "admin" : "staff")}
+                  onValueChange={(v) => changeRole(u.id, v)}
+                >
+                  <SelectTrigger className="h-8 w-36"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {roles.map((r) => (
+                      <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  aria-label={`Remove roles for ${u.email}`}
+                  onClick={() => revoke(u.id)}
+                >
+                  <Trash2 size={15} />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Accounts, roles and page permissions are stored in the backend database. Public sign-ups
+          stay disabled — only an administrator can create accounts here.
+        </p>
+      </Card>
+    </>
   );
 }
+
 
 
 function NotificationsSection() {
