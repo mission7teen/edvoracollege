@@ -166,9 +166,10 @@ function SettingsPage() {
           animate={{ opacity: 1, y: 0 }}
           className="space-y-4"
         >
-          {active !== "college" && (
+          {active !== home && (
             <button
-              onClick={() => setActive("college")}
+              onClick={() => setActive(home)}
+
               className="lg:hidden inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-colors"
               aria-label="Back to configuration"
             >
