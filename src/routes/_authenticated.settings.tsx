@@ -75,15 +75,16 @@ export const Route = createFileRoute("/_authenticated/settings")({
 });
 
 const SECTIONS = [
-  { id: "college", label: "College Information", icon: Building2, adminOnly: false },
-  { id: "general", label: "General Settings", icon: Globe, adminOnly: false },
+  { id: "college", label: "College Information", icon: Building2, adminOnly: true },
+  { id: "general", label: "General Settings", icon: Globe, adminOnly: true },
   { id: "profile", label: "User Profile", icon: User, adminOnly: false },
   { id: "security", label: "Account Security", icon: Lock, adminOnly: false },
   { id: "roles", label: "Users & Roles", icon: Users, adminOnly: true },
-  { id: "notifications", label: "Notifications", icon: MessageSquare, adminOnly: false },
+  { id: "notifications", label: "Notifications", icon: MessageSquare, adminOnly: true },
   { id: "appearance", label: "Appearance", icon: Palette, adminOnly: false },
   { id: "backup", label: "Backup & Restore", icon: DatabaseBackup, adminOnly: true },
   { id: "audit", label: "Audit Logs", icon: ScrollText, adminOnly: true },
+
 ] as const;
 
 type SectionId = (typeof SECTIONS)[number]["id"];
