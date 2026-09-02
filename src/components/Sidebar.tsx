@@ -20,23 +20,25 @@ import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
 const items = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/students", label: "Students", icon: Users },
-  { to: "/teachers", label: "Teachers", icon: GraduationCap },
-  { to: "/batches", label: "Batches", icon: Layers },
-  { to: "/subjects", label: "Subjects", icon: BookOpen },
-  { to: "/attendance", label: "Mark Attendance", icon: ClipboardCheck },
-  { to: "/history", label: "Attendance History", icon: History },
-  { to: "/exams", label: "Exam Marks", icon: Award },
-  { to: "/payments", label: "Payments", icon: Wallet },
-  { to: "/reports", label: "Reports", icon: FileBarChart },
-  { to: "/analytics", label: "Analytics", icon: TrendingUp },
-  { to: "/settings", label: "Settings", icon: Settings },
+  { to: "/dashboard", page: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/students", page: "students", label: "Students", icon: Users },
+  { to: "/teachers", page: "teachers", label: "Teachers", icon: GraduationCap },
+  { to: "/batches", page: "batches", label: "Batches", icon: Layers },
+  { to: "/subjects", page: "subjects", label: "Subjects", icon: BookOpen },
+  { to: "/attendance", page: "attendance", label: "Mark Attendance", icon: ClipboardCheck },
+  { to: "/history", page: "history", label: "Attendance History", icon: History },
+  { to: "/exams", page: "exams", label: "Exam Marks", icon: Award },
+  { to: "/payments", page: "payments", label: "Payments", icon: Wallet },
+  { to: "/reports", page: "reports", label: "Reports", icon: FileBarChart },
+  { to: "/analytics", page: "analytics", label: "Analytics", icon: TrendingUp },
+  { to: "/settings", page: "settings", label: "Settings", icon: Settings },
 ] as const;
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const logout = useAuth((s) => s.logout);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { loading: roleLoading, can } = useRole();
+  const visible = items.filter((it) => roleLoading || can(it.page));
 
   return (
     <aside className="flex h-full w-64 flex-col border-r border-border bg-card/60 backdrop-blur-xl">
@@ -44,7 +46,8 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         <Logo />
       </div>
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-        {items.map((it, i) => {
+        {visible.map((it, i) => {
+
           const active = pathname === it.to || pathname.startsWith(it.to + "/");
           const Icon = it.icon;
           return (
