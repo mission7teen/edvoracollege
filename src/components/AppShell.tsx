@@ -37,12 +37,23 @@ export function AppShell({
   const goSettings = (hash: string) => {
     navigate({ to: "/settings", hash });
   };
-  const initials = (settings.name || "Edvora College")
-    .split(" ")
+  const [fullName, setFullName] = useState("");
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      const m = (data.user?.user_metadata || {}) as Record<string, string>;
+      setFullName(m.full_name || "");
+    });
+  }, []);
+
+  const displayName = fullName || username || settings.name || "Account";
+  const initials = displayName
+    .split(/[\s@.]+/)
     .filter(Boolean)
     .slice(0, 2)
     .map((w) => w[0]?.toUpperCase())
     .join("");
+
 
   useEffect(() => {
     if (typeof document === "undefined") return;
