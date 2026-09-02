@@ -1,10 +1,12 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Sidebar } from "./Sidebar";
-import { Bell, Menu, Moon, Search, Sun, User, Lock, KeyRound, Palette, MessageSquare, LogOut } from "lucide-react";
+import { Menu, Moon, Search, Sun, User, Lock, KeyRound, Palette, MessageSquare, LogOut } from "lucide-react";
 import { useData, useAuth } from "@/lib/store";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useNavigate } from "@tanstack/react-router";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
