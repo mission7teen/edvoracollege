@@ -105,8 +105,9 @@ function SettingsPage() {
   const blocked = !roleLoading && !isAdmin && !!activeSection?.adminOnly;
 
   useEffect(() => {
-    if (blocked) setActive("college");
+    if (blocked) setActive("profile");
   }, [blocked]);
+
 
   return (
     <AppShell title="Settings" subtitle="System command center and configuration">
@@ -177,15 +178,16 @@ function SettingsPage() {
             <AdminOnlyNotice />
           ) : (
             <>
-              {active === "college" && <CollegeSection />}
-              {active === "general" && <GeneralSection />}
+              {active === "college" && isAdmin && <CollegeSection />}
+              {active === "general" && isAdmin && <GeneralSection />}
               {active === "profile" && <ProfileSection />}
               {active === "security" && <SecuritySection />}
               {active === "roles" && isAdmin && <RolesSection />}
-              {active === "notifications" && <NotificationsSection />}
+              {active === "notifications" && isAdmin && <NotificationsSection />}
               {active === "appearance" && <AppearanceSection />}
               {active === "backup" && isAdmin && <BackupSection />}
               {active === "audit" && isAdmin && <AuditSection />}
+
             </>
           )}
         </motion.section>
