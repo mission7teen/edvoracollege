@@ -147,7 +147,20 @@ export function AppShell({
           </div>
           {actions && <div className="px-4 lg:px-8 pb-3 -mt-1 flex flex-wrap gap-2">{actions}</div>}
         </header>
-        <main className="flex-1 p-4 lg:p-8 max-w-[1600px] w-full mx-auto">{children}</main>
+        <main className="flex-1 p-4 lg:p-8 max-w-[1600px] w-full mx-auto">
+          {allowed ? (
+            children
+          ) : (
+            <div className="glass-card rounded-2xl p-8 text-center space-y-2">
+              <h2 className="font-bold text-lg">No access to this page</h2>
+              <p className="text-sm text-muted-foreground">
+                Your role doesn’t include permission for this page. Ask an administrator to grant
+                access in Settings → Users &amp; Roles.
+              </p>
+            </div>
+          )}
+        </main>
+
       </div>
     </div>
   );
