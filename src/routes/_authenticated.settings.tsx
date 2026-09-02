@@ -103,6 +103,7 @@ function SettingsPage() {
   const visible = SECTIONS.filter((s) => !s.adminOnly || isAdmin || roleLoading);
   const activeSection = SECTIONS.find((s) => s.id === active);
   const blocked = !roleLoading && !isAdmin && !!activeSection?.adminOnly;
+  const home: SectionId = isAdmin || roleLoading ? "college" : "profile";
 
   useEffect(() => {
     if (blocked) setActive("profile");
@@ -118,8 +119,9 @@ function SettingsPage() {
           animate={{ opacity: 1, y: 0 }}
           className={cn(
             "glass-card rounded-2xl p-3 lg:sticky lg:top-4",
-            active !== "college" && "hidden lg:block"
+            active !== home && "hidden lg:block"
           )}
+
           aria-label="Settings sections"
         >
           <div className="px-3 py-2 flex items-center justify-between">
