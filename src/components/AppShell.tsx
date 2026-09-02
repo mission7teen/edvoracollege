@@ -53,12 +53,16 @@ export function AppShell({
     .slice(0, 2)
     .map((w) => w[0]?.toUpperCase())
     .join("");
-
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { loading: roleLoading, can } = useRole();
+  const pageId = pathname.split("/").filter(Boolean)[0] ?? "dashboard";
+  const allowed = roleLoading || can(pageId);
 
   useEffect(() => {
     if (typeof document === "undefined") return;
     document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);
+
 
   return (
     <div className="min-h-screen flex bg-background">
