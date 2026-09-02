@@ -5,7 +5,9 @@ import { useData, useAuth } from "@/lib/store";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
+import { useRole } from "@/hooks/use-role";
+
 
 import {
   DropdownMenu,
