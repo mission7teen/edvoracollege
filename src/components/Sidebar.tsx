@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { Logo } from "./Logo";
 import { useAuth } from "@/lib/store";
+import { useRole } from "@/hooks/use-role";
+
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
