@@ -1,10 +1,14 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Sidebar } from "./Sidebar";
-import { Bell, Menu, Moon, Search, Sun, User, Lock, KeyRound, Palette, MessageSquare, LogOut } from "lucide-react";
+import { Menu, Moon, Search, Sun, User, Lock, KeyRound, Palette, MessageSquare, LogOut } from "lucide-react";
 import { useData, useAuth } from "@/lib/store";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
+import { useRole } from "@/hooks/use-role";
+
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,17 +39,32 @@ export function AppShell({
   const goSettings = (hash: string) => {
     navigate({ to: "/settings", hash });
   };
-  const initials = (settings.name || "Edvora College")
-    .split(" ")
+  const [fullName, setFullName] = useState("");
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      const m = (data.user?.user_metadata || {}) as Record<string, string>;
+      setFullName(m.full_name || "");
+    });
+  }, []);
+
+  const displayName = fullName || username || settings.name || "Account";
+  const initials = displayName
+    .split(/[\s@.]+/)
     .filter(Boolean)
     .slice(0, 2)
     .map((w) => w[0]?.toUpperCase())
     .join("");
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { loading: roleLoading, can } = useRole();
+  const pageId = pathname.split("/").filter(Boolean)[0] ?? "dashboard";
+  const allowed = roleLoading || can(pageId);
 
   useEffect(() => {
     if (typeof document === "undefined") return;
     document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);
+
 
   return (
     <div className="min-h-screen flex bg-background">
@@ -80,9 +99,6 @@ export function AppShell({
             >
               {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
             </Button>
-            <Button variant="ghost" size="icon" aria-label="notifications">
-              <Bell size={18} />
-            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
@@ -93,18 +109,19 @@ export function AppShell({
                     {initials || "EC"}
                   </div>
                   <div className="hidden sm:block text-xs leading-tight text-left">
-                    <div className="font-semibold truncate max-w-[120px]">{settings.name}</div>
-                    <div className="text-muted-foreground">{settings.academicYear}</div>
+                    <div className="font-semibold truncate max-w-[120px]">{displayName}</div>
+                    <div className="text-muted-foreground truncate max-w-[120px]">{username}</div>
                   </div>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64 rounded-2xl p-2">
                 <DropdownMenuLabel className="px-3 py-2">
-                  <div className="text-base font-bold leading-tight truncate">{settings.name}</div>
+                  <div className="text-base font-bold leading-tight truncate">{displayName}</div>
                   <div className="text-sm text-muted-foreground font-normal truncate">
                     {username ?? settings.email}
                   </div>
                 </DropdownMenuLabel>
+
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="py-2.5 text-sm" onSelect={() => goSettings("profile")}>
                   <User size={16} className="mr-2" /> My Profile
@@ -136,7 +153,20 @@ export function AppShell({
           </div>
           {actions && <div className="px-4 lg:px-8 pb-3 -mt-1 flex flex-wrap gap-2">{actions}</div>}
         </header>
-        <main className="flex-1 p-4 lg:p-8 max-w-[1600px] w-full mx-auto">{children}</main>
+        <main className="flex-1 p-4 lg:p-8 max-w-[1600px] w-full mx-auto">
+          {allowed ? (
+            children
+          ) : (
+            <div className="glass-card rounded-2xl p-8 text-center space-y-2">
+              <h2 className="font-bold text-lg">No access to this page</h2>
+              <p className="text-sm text-muted-foreground">
+                Your role doesn’t include permission for this page. Ask an administrator to grant
+                access in Settings → Users &amp; Roles.
+              </p>
+            </div>
+          )}
+        </main>
+
       </div>
     </div>
   );
