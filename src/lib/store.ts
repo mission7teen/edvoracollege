@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { DEFAULT_ACCENT } from "./theme";
 import type {
   Student,
   Course,
@@ -30,6 +31,8 @@ interface DataState {
   attendance: AttendanceRecord[];
   settings: CollegeSettings;
   theme: "light" | "dark";
+  accent: string;
+  customAccents: string[];
   subjectSheetIds: Record<string, string>;
   exams: Exam[];
   examMarks: ExamMark[];
@@ -63,6 +66,9 @@ interface DataState {
   updateAttendanceRecord: (id: string, patch: Partial<AttendanceRecord>) => void;
   updateSettings: (patch: Partial<CollegeSettings>) => void;
   setTheme: (t: "light" | "dark") => void;
+  setAccent: (hex: string) => void;
+  addCustomAccent: (hex: string) => void;
+  removeCustomAccent: (hex: string) => void;
   setSubjectSheetId: (key: string, spreadsheetId: string) => void;
   addExam: (e: Omit<Exam, "id">) => string;
   updateExam: (id: string, patch: Partial<Exam>) => void;
@@ -252,6 +258,8 @@ export const useData = create<DataState>()(
       attendance: [],
       settings: defaultSettings,
       theme: "light",
+      accent: DEFAULT_ACCENT,
+      customAccents: [],
       subjectSheetIds: {},
       exams: [],
       examMarks: [],
@@ -405,6 +413,13 @@ export const useData = create<DataState>()(
         fnf(supabase.from("app_settings").upsert({ id: "default", data: settings as any, updated_at: new Date().toISOString() }));
       },
       setTheme: (t) => set({ theme: t }),
+      setAccent: (hex) => set({ accent: hex }),
+      addCustomAccent: (hex) => {
+        const list = get().customAccents;
+        set({ customAccents: list.includes(hex) ? list : [...list, hex], accent: hex });
+      },
+      removeCustomAccent: (hex) =>
+        set({ customAccents: get().customAccents.filter((c) => c !== hex) }),
       setSubjectSheetId: (key, spreadsheetId) => {
         set({ subjectSheetIds: { ...get().subjectSheetIds, [key]: spreadsheetId } });
         fnf(supabase.from("subject_sheets").upsert({ key, spreadsheet_id: spreadsheetId }));
@@ -497,7 +512,7 @@ export const useData = create<DataState>()(
     {
       name: "edvora-ui-v1",
       // Only persist UI preferences locally; data lives in Lovable Cloud.
-      partialize: (s) => ({ theme: s.theme }) as any,
+      partialize: (s) => ({ theme: s.theme, accent: s.accent, customAccents: s.customAccents }) as any,
     },
   ),
 );
