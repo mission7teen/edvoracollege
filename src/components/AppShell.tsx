@@ -60,11 +60,6 @@ export function AppShell({
   const pageId = pathname.split("/").filter(Boolean)[0] ?? "dashboard";
   const allowed = roleLoading || can(pageId);
 
-  useEffect(() => {
-    if (typeof document === "undefined") return;
-    document.documentElement.classList.toggle("dark", theme === "dark");
-  }, [theme]);
-
 
   return (
     <div className="min-h-screen flex bg-background">
@@ -78,7 +73,7 @@ export function AppShell({
       </Sheet>
 
       <div className="flex-1 min-w-0 flex flex-col">
-        <header className="sticky top-0 z-30 border-b border-border bg-background/70 backdrop-blur-xl">
+        <header className="sticky top-0 z-30 border-b border-border bg-background/95 lg:bg-background/70 lg:backdrop-blur-xl">
           <div className="h-16 px-4 lg:px-8 flex items-center gap-3">
             <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setOpen(true)} aria-label="Open navigation menu">
               <Menu />
