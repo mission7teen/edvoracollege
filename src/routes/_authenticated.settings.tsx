@@ -29,6 +29,7 @@ import {
 import { useAuth, useData } from "@/lib/store";
 import { exportCSV, exportJSON } from "@/lib/exporters";
 import { supabase } from "@/integrations/supabase/client";
+import { PRESET_ACCENTS } from "@/lib/theme";
 import { toast } from "sonner";
 import { useRole } from "@/hooks/use-role";
 import {
@@ -965,10 +966,17 @@ function NotificationsSection() {
 }
 
 function AppearanceSection() {
-  const { theme, setTheme } = useData();
+  const { theme, setTheme, accent, setAccent, customAccents, addCustomAccent, removeCustomAccent } =
+    useData();
   const { form, setForm, save } = useSettingsForm();
+  const [draft, setDraft] = useState("#3949e0");
+  const swatches = [
+    ...PRESET_ACCENTS,
+    ...customAccents.map((hex) => ({ name: "Custom", hex, custom: true as const })),
+  ];
+
   return (
-    <Card title="Appearance" desc="Theme and layout density for this console." icon={Palette}>
+    <Card title="Appearance" desc="Theme, accent colour and layout density for this console." icon={Palette}>
       <div className="grid grid-cols-2 gap-3">
         {(["light", "dark"] as const).map((t) => (
           <button
@@ -982,6 +990,73 @@ function AppearanceSection() {
           </button>
         ))}
       </div>
+
+      <div className="space-y-3">
+        <div>
+          <div className="text-sm font-semibold">Accent colour</div>
+          <p className="text-xs text-muted-foreground">
+            Changes the primary colour across the whole application.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {swatches.map((c) => (
+            <div key={c.hex} className="relative">
+              <button
+                type="button"
+                title={`${c.name} ${c.hex}`}
+                aria-label={`Use ${c.name} accent colour`}
+                onClick={() => setAccent(c.hex)}
+                className={`h-10 w-10 rounded-xl border-2 transition-transform hover:scale-105 ${
+                  accent.toLowerCase() === c.hex.toLowerCase()
+                    ? "border-foreground"
+                    : "border-border"
+                }`}
+                style={{ background: c.hex }}
+              />
+              {"custom" in c && (
+                <button
+                  type="button"
+                  aria-label="Remove colour"
+                  onClick={() => removeCustomAccent(c.hex)}
+                  className="absolute -right-1 -top-1 h-4 w-4 rounded-full bg-destructive text-[10px] leading-none text-destructive-foreground"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            type="color"
+            aria-label="Pick a custom colour"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            className="h-10 w-14 cursor-pointer rounded-lg border border-border bg-transparent p-1"
+          />
+          <Input
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            className="w-32"
+            placeholder="#3949e0"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              if (!/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(draft.trim())) {
+                toast.error("Enter a valid hex colour, e.g. #3949e0");
+                return;
+              }
+              addCustomAccent(draft.trim().toLowerCase());
+              toast.success("Colour added and applied");
+            }}
+          >
+            Add colour
+          </Button>
+        </div>
+      </div>
+
       <F label="Density">
         <Select
           value={form.density ?? "comfortable"}
