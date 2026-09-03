@@ -34,11 +34,13 @@ import { useRole } from "@/hooks/use-role";
 import {
   listUserRoles,
   createStaffAccount,
-  setUserRole,
   removeUserRoles,
+  assignAccessRole,
 } from "@/lib/roles.functions";
+import { APP_PAGES, ALL_PAGE_IDS, type AppRoleRow } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 import type { CollegeSettings } from "@/lib/types";
+
 import {
   Building2,
   Globe,
