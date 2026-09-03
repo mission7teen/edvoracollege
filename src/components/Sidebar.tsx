@@ -43,7 +43,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const visible = items.filter((it) => roleLoading || can(it.page));
 
   return (
-    <aside className="flex h-full w-64 flex-col border-r border-border bg-card/60 backdrop-blur-xl">
+    <aside className="flex h-full w-64 flex-col border-r border-border bg-card lg:bg-card/60 lg:backdrop-blur-xl">
       <div className="px-5 h-16 flex items-center border-b border-border">
         <Logo />
       </div>

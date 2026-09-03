@@ -189,11 +189,16 @@
 }
 
 @utility glass-card {
-  background: color-mix(in oklab, var(--card) 70%, transparent);
-  backdrop-filter: blur(16px) saturate(140%);
+  background: color-mix(in oklab, var(--card) 88%, transparent);
   border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
   box-shadow: var(--shadow-card);
+  /* backdrop blur is expensive on mobile GPUs — only on large screens */
+  @media (min-width: 1024px) {
+    background: color-mix(in oklab, var(--card) 70%, transparent);
+    backdrop-filter: blur(10px) saturate(140%);
+  }
 }
+
 
 @utility gradient-primary {
   background: var(--gradient-primary);

@@ -212,7 +212,7 @@ function PortfolioView({
           ))}
         </section>
 
-        <div className="sticky top-0 z-20 -mx-4 mt-6 border-y border-border/60 bg-background/80 px-4 py-3 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+        <div className="sticky top-0 z-20 -mx-4 mt-6 border-y border-border/60 bg-background/95 px-4 py-3 lg:backdrop-blur-xl sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
           <div className="mx-auto flex max-w-7xl flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="relative min-w-0 flex-1 lg:max-w-sm">
               <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -230,7 +230,7 @@ function PortfolioView({
         </div>
 
         <Tabs defaultValue="overview" className="mt-5">
-          <TabsList className="h-auto w-full justify-start overflow-x-auto rounded-2xl bg-card/70 p-1.5 shadow-card backdrop-blur lg:grid lg:grid-cols-7">
+          <TabsList className="h-auto w-full justify-start overflow-x-auto rounded-2xl bg-card p-1.5 shadow-card lg:grid lg:grid-cols-7">
             {tabs.map((tab) => (
               <TabsTrigger key={tab.value} value={tab.value} className="min-w-max gap-2 rounded-xl px-3 py-2">
                 <tab.icon size={15} /> {tab.label}
