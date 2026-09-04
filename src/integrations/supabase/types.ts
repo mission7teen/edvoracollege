@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       app_roles: {
         Row: {
+          college_id: string | null
           created_at: string
           id: string
           is_admin: boolean
@@ -24,6 +25,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          college_id?: string | null
           created_at?: string
           id: string
           is_admin?: boolean
@@ -32,6 +34,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          college_id?: string | null
           created_at?: string
           id?: string
           is_admin?: boolean
@@ -39,29 +42,49 @@ export type Database = {
           pages?: string[]
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "app_roles_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       app_settings: {
         Row: {
+          college_id: string
           data: Json
           id: string
           updated_at: string
         }
         Insert: {
+          college_id?: string
           data?: Json
           id?: string
           updated_at?: string
         }
         Update: {
+          college_id?: string
           data?: Json
           id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "app_settings_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: true
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       attendance: {
         Row: {
           batch_id: string | null
+          college_id: string
           course_id: string | null
           created_at: string
           date: string
@@ -73,6 +96,7 @@ export type Database = {
         }
         Insert: {
           batch_id?: string | null
+          college_id?: string
           course_id?: string | null
           created_at?: string
           date: string
@@ -84,6 +108,7 @@ export type Database = {
         }
         Update: {
           batch_id?: string | null
+          college_id?: string
           course_id?: string | null
           created_at?: string
           date?: string
@@ -93,12 +118,21 @@ export type Database = {
           student_id?: string
           teacher_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "attendance_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       batches: {
         Row: {
           academic_year: string | null
           code: string
+          college_id: string
           course_id: string | null
           created_at: string
           id: string
@@ -108,6 +142,7 @@ export type Database = {
         Insert: {
           academic_year?: string | null
           code: string
+          college_id?: string
           course_id?: string | null
           created_at?: string
           id: string
@@ -117,17 +152,80 @@ export type Database = {
         Update: {
           academic_year?: string | null
           code?: string
+          college_id?: string
           course_id?: string | null
           created_at?: string
           id?: string
           name?: string
           schedule?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "batches_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      college_members: {
+        Row: {
+          college_id: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          college_id: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          college_id?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "college_members_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      colleges: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          owner_id: string | null
+          setup_completed: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string | null
+          setup_completed?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string | null
+          setup_completed?: boolean
+          updated_at?: string
+        }
         Relationships: []
       }
       courses: {
         Row: {
           code: string
+          college_id: string
           created_at: string
           description: string | null
           duration: string | null
@@ -139,6 +237,7 @@ export type Database = {
         }
         Insert: {
           code: string
+          college_id?: string
           created_at?: string
           description?: string | null
           duration?: string | null
@@ -150,6 +249,7 @@ export type Database = {
         }
         Update: {
           code?: string
+          college_id?: string
           created_at?: string
           description?: string | null
           duration?: string | null
@@ -159,10 +259,19 @@ export type Database = {
           name?: string
           start_date?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "courses_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       exam_marks: {
         Row: {
+          college_id: string
           created_at: string
           exam_id: string
           grade: string
@@ -171,6 +280,7 @@ export type Database = {
           student_id: string
         }
         Insert: {
+          college_id?: string
           created_at?: string
           exam_id: string
           grade?: string
@@ -179,6 +289,7 @@ export type Database = {
           student_id: string
         }
         Update: {
+          college_id?: string
           created_at?: string
           exam_id?: string
           grade?: string
@@ -186,11 +297,20 @@ export type Database = {
           marks?: number
           student_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "exam_marks_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       exams: {
         Row: {
           batch_id: string | null
+          college_id: string
           created_at: string
           date: string
           id: string
@@ -201,6 +321,7 @@ export type Database = {
         }
         Insert: {
           batch_id?: string | null
+          college_id?: string
           created_at?: string
           date?: string
           id: string
@@ -211,6 +332,7 @@ export type Database = {
         }
         Update: {
           batch_id?: string | null
+          college_id?: string
           created_at?: string
           date?: string
           id?: string
@@ -219,11 +341,20 @@ export type Database = {
           subject_id?: string | null
           type?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "exams_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payment_packages: {
         Row: {
           amount: number
+          college_id: string
           created_at: string
           description: string
           id: string
@@ -231,6 +362,7 @@ export type Database = {
         }
         Insert: {
           amount?: number
+          college_id?: string
           created_at?: string
           description?: string
           id: string
@@ -238,16 +370,26 @@ export type Database = {
         }
         Update: {
           amount?: number
+          college_id?: string
           created_at?: string
           description?: string
           id?: string
           name?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "payment_packages_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       student_payments: {
         Row: {
           amount: number
+          college_id: string
           created_at: string
           id: string
           month: string
@@ -257,6 +399,7 @@ export type Database = {
         }
         Insert: {
           amount?: number
+          college_id?: string
           created_at?: string
           id: string
           month: string
@@ -266,6 +409,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          college_id?: string
           created_at?: string
           id?: string
           month?: string
@@ -273,12 +417,21 @@ export type Database = {
           paid_on?: string
           student_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "student_payments_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       students: {
         Row: {
           address: string | null
           batch_id: string | null
+          college_id: string
           course_id: string | null
           created_at: string
           dob: string | null
@@ -298,6 +451,7 @@ export type Database = {
         Insert: {
           address?: string | null
           batch_id?: string | null
+          college_id?: string
           course_id?: string | null
           created_at?: string
           dob?: string | null
@@ -317,6 +471,7 @@ export type Database = {
         Update: {
           address?: string | null
           batch_id?: string | null
+          college_id?: string
           course_id?: string | null
           created_at?: string
           dob?: string | null
@@ -333,28 +488,48 @@ export type Database = {
           status?: string | null
           student_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "students_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subject_sheets: {
         Row: {
+          college_id: string
           created_at: string
           key: string
           spreadsheet_id: string
         }
         Insert: {
+          college_id?: string
           created_at?: string
           key: string
           spreadsheet_id: string
         }
         Update: {
+          college_id?: string
           created_at?: string
           key?: string
           spreadsheet_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "subject_sheets_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       teachers: {
         Row: {
+          college_id: string
           created_at: string
           email: string | null
           full_name: string
@@ -368,6 +543,7 @@ export type Database = {
           subject_ids: string[] | null
         }
         Insert: {
+          college_id?: string
           created_at?: string
           email?: string | null
           full_name: string
@@ -381,6 +557,7 @@ export type Database = {
           subject_ids?: string[] | null
         }
         Update: {
+          college_id?: string
           created_at?: string
           email?: string | null
           full_name?: string
@@ -393,28 +570,46 @@ export type Database = {
           subject_id?: string | null
           subject_ids?: string[] | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "teachers_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_access: {
         Row: {
+          college_id: string | null
           created_at: string
           role_id: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          college_id?: string | null
           created_at?: string
           role_id?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          college_id?: string | null
           created_at?: string
           role_id?: string | null
           updated_at?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "user_access_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "user_access_role_id_fkey"
             columns: ["role_id"]
@@ -426,30 +621,44 @@ export type Database = {
       }
       user_roles: {
         Row: {
+          college_id: string | null
           created_at: string
           id: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
+          college_id?: string | null
           created_at?: string
           id?: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
+          college_id?: string | null
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      complete_my_setup: { Args: never; Returns: undefined }
+      create_my_college: { Args: { _name: string }; Returns: string }
+      current_college_id: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -458,6 +667,11 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
+      save_app_settings: { Args: { _data: Json }; Returns: undefined }
+      save_subject_sheet: {
+        Args: { _key: string; _spreadsheet_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "staff"
