@@ -222,7 +222,7 @@ async function fetchAll() {
     supabase.from("teachers").select("*"),
     supabase.from("students").select("*"),
     supabase.from("attendance").select("*"),
-    supabase.from("app_settings").select("*").eq("id", "default").maybeSingle(),
+    supabase.from("app_settings").select("*").limit(1).maybeSingle(),
     supabase.from("subject_sheets").select("*"),
     supabase.from("exams").select("*"),
     supabase.from("exam_marks").select("*"),
@@ -269,22 +269,10 @@ export const useData = create<DataState>()(
       hydrate: async () => {
         if (get().hydrated) return;
         try {
-          let { c, b, t, s, a, set: settingsRow, sh, ex, em, pp, sp } = await fetchAll();
-          const isEmpty =
-            !c.error && !b.error && !s.error &&
-            (c.data?.length ?? 0) === 0 &&
-            (b.data?.length ?? 0) === 0 &&
-            (s.data?.length ?? 0) === 0;
-          if (isEmpty) {
-            await seedCloudIfEmpty();
-            ({ c, b, t, s, a, set: settingsRow, sh, ex, em, pp, sp } = await fetchAll());
-          }
+          const { c, b, t, s, a, set: settingsRow, sh, ex, em, pp, sp } = await fetchAll();
           const settings = settingsRow?.data?.data
             ? { ...defaultSettings, ...(settingsRow.data.data as any) }
             : defaultSettings;
-          if (!settingsRow?.data) {
-            fnf(supabase.from("app_settings").upsert({ id: "default", data: settings as any }));
-          }
           const subjectSheetIds: Record<string, string> = {};
           for (const row of sh.data || []) subjectSheetIds[row.key] = row.spreadsheet_id;
           set({
@@ -410,7 +398,7 @@ export const useData = create<DataState>()(
       updateSettings: (patch) => {
         const settings = { ...get().settings, ...patch };
         set({ settings });
-        fnf(supabase.from("app_settings").upsert({ id: "default", data: settings as any, updated_at: new Date().toISOString() }));
+        fnf(supabase.rpc("save_app_settings", { _data: settings as any }));
       },
       setTheme: (t) => set({ theme: t }),
       setAccent: (hex) => set({ accent: hex }),
@@ -422,7 +410,7 @@ export const useData = create<DataState>()(
         set({ customAccents: get().customAccents.filter((c) => c !== hex) }),
       setSubjectSheetId: (key, spreadsheetId) => {
         set({ subjectSheetIds: { ...get().subjectSheetIds, [key]: spreadsheetId } });
-        fnf(supabase.from("subject_sheets").upsert({ key, spreadsheet_id: spreadsheetId }));
+        fnf(supabase.rpc("save_subject_sheet", { _key: key, _spreadsheet_id: spreadsheetId }));
       },
       addExam: (e) => {
         const exam: Exam = { ...e, id: genId("e") };
