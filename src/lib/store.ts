@@ -269,22 +269,10 @@ export const useData = create<DataState>()(
       hydrate: async () => {
         if (get().hydrated) return;
         try {
-          let { c, b, t, s, a, set: settingsRow, sh, ex, em, pp, sp } = await fetchAll();
-          const isEmpty =
-            !c.error && !b.error && !s.error &&
-            (c.data?.length ?? 0) === 0 &&
-            (b.data?.length ?? 0) === 0 &&
-            (s.data?.length ?? 0) === 0;
-          if (isEmpty) {
-            await seedCloudIfEmpty();
-            ({ c, b, t, s, a, set: settingsRow, sh, ex, em, pp, sp } = await fetchAll());
-          }
+          const { c, b, t, s, a, set: settingsRow, sh, ex, em, pp, sp } = await fetchAll();
           const settings = settingsRow?.data?.data
             ? { ...defaultSettings, ...(settingsRow.data.data as any) }
             : defaultSettings;
-          if (!settingsRow?.data) {
-            fnf(supabase.from("app_settings").upsert({ id: "default", data: settings as any }));
-          }
           const subjectSheetIds: Record<string, string> = {};
           for (const row of sh.data || []) subjectSheetIds[row.key] = row.spreadsheet_id;
           set({
