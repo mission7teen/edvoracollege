@@ -4,13 +4,33 @@ import { assertAdmin } from "./roles.server";
 
 export type AppRoleValue = "admin" | "staff";
 
+/** The college (tenant) the calling admin belongs to. */
+async function callerCollegeId(context: any): Promise<string> {
+  const { data, error } = await context.supabase.rpc("current_college_id");
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("Finish your college setup first");
+  return data as string;
+}
+
+/** Ids of every account that belongs to the given college. */
+async function memberIds(admin: any, collegeId: string): Promise<Set<string>> {
+  const { data, error } = await admin
+    .from("college_members")
+    .select("user_id")
+    .eq("college_id", collegeId);
+  if (error) throw new Error(error.message);
+  return new Set((data ?? []).map((m: { user_id: string }) => m.user_id));
+}
+
 
 /** List every auth user with the roles assigned in the user_roles table. */
 export const listUserRoles = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context);
+    const collegeId = await callerCollegeId(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const members = await memberIds(supabaseAdmin, collegeId);
 
     const { data: usersRes, error: uErr } = await supabaseAdmin.auth.admin.listUsers({
       page: 1,
@@ -20,12 +40,14 @@ export const listUserRoles = createServerFn({ method: "GET" })
 
     const { data: roleRows, error: rErr } = await supabaseAdmin
       .from("user_roles")
-      .select("id, user_id, role");
+      .select("id, user_id, role")
+      .eq("college_id", collegeId);
     if (rErr) throw new Error(rErr.message);
 
     const { data: accessRows } = await supabaseAdmin
       .from("user_access")
-      .select("user_id, role_id");
+      .select("user_id, role_id")
+      .eq("college_id", collegeId);
 
     const accessByUser = new Map<string, string>();
     for (const a of accessRows ?? []) {
@@ -37,7 +59,7 @@ export const listUserRoles = createServerFn({ method: "GET" })
       byUser.set(r.user_id, [...(byUser.get(r.user_id) ?? []), r.role as string]);
     }
 
-    return (usersRes?.users ?? []).map((u) => ({
+    return (usersRes?.users ?? []).filter((u) => members.has(u.id)).map((u) => ({
       id: u.id,
       email: u.email ?? "",
       fullName: ((u.user_metadata ?? {}) as Record<string, string>)["full_name"] ?? "",
@@ -59,26 +81,39 @@ export const assignAccessRole = createServerFn({ method: "POST" })
   })
   .handler(async ({ context, data }) => {
     await assertAdmin(context);
+    const collegeId = await callerCollegeId(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const members = await memberIds(supabaseAdmin, collegeId);
+    if (!members.has(data.userId)) throw new Error("That account is not in your college");
 
     const { data: role, error: roleErr } = await supabaseAdmin
       .from("app_roles")
-      .select("id, is_admin")
+      .select("id, is_admin, college_id")
       .eq("id", data.roleId)
       .maybeSingle();
     if (roleErr) throw new Error(roleErr.message);
     if (!role) throw new Error("Role not found");
+    if (role.college_id && role.college_id !== collegeId) throw new Error("Role not found");
 
     const { error } = await supabaseAdmin
       .from("user_access")
-      .upsert({ user_id: data.userId, role_id: data.roleId, updated_at: new Date().toISOString() });
+      .upsert({
+        user_id: data.userId,
+        role_id: data.roleId,
+        college_id: collegeId,
+        updated_at: new Date().toISOString(),
+      });
     if (error) throw new Error(error.message);
 
     // Keep the admin flag (used by RLS) in sync with the assigned role.
-    await supabaseAdmin.from("user_roles").delete().eq("user_id", data.userId);
     await supabaseAdmin
       .from("user_roles")
-      .insert({ user_id: data.userId, role: role.is_admin ? "admin" : "staff" });
+      .delete()
+      .eq("user_id", data.userId)
+      .eq("college_id", collegeId);
+    await supabaseAdmin
+      .from("user_roles")
+      .insert({ user_id: data.userId, role: role.is_admin ? "admin" : "staff", college_id: collegeId });
 
     return { ok: true };
   });
@@ -97,6 +132,7 @@ export const createStaffAccount = createServerFn({ method: "POST" })
   })
   .handler(async ({ context, data }) => {
     await assertAdmin(context);
+    const collegeId = await callerCollegeId(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
@@ -108,9 +144,14 @@ export const createStaffAccount = createServerFn({ method: "POST" })
     const userId = created.user?.id;
     if (!userId) throw new Error("Account creation failed");
 
+    const { error: mErr } = await supabaseAdmin
+      .from("college_members")
+      .insert({ user_id: userId, college_id: collegeId });
+    if (mErr) throw new Error(mErr.message);
+
     const { error: rErr } = await supabaseAdmin
       .from("user_roles")
-      .insert({ user_id: userId, role: data.role });
+      .insert({ user_id: userId, role: data.role, college_id: collegeId });
     if (rErr) throw new Error(rErr.message);
 
     return { id: userId, email: data.email, role: data.role };
@@ -126,11 +167,18 @@ export const setUserRole = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context, data }) => {
     await assertAdmin(context);
+    const collegeId = await callerCollegeId(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await supabaseAdmin.from("user_roles").delete().eq("user_id", data.userId);
+    const members = await memberIds(supabaseAdmin, collegeId);
+    if (!members.has(data.userId)) throw new Error("That account is not in your college");
+    await supabaseAdmin
+      .from("user_roles")
+      .delete()
+      .eq("user_id", data.userId)
+      .eq("college_id", collegeId);
     const { error } = await supabaseAdmin
       .from("user_roles")
-      .insert({ user_id: data.userId, role: data.role });
+      .insert({ user_id: data.userId, role: data.role, college_id: collegeId });
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -145,8 +193,15 @@ export const removeUserRoles = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context, data }) => {
     await assertAdmin(context);
+    const collegeId = await callerCollegeId(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.from("user_roles").delete().eq("user_id", data.userId);
+    const members = await memberIds(supabaseAdmin, collegeId);
+    if (!members.has(data.userId)) throw new Error("That account is not in your college");
+    const { error } = await supabaseAdmin
+      .from("user_roles")
+      .delete()
+      .eq("user_id", data.userId)
+      .eq("college_id", collegeId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
