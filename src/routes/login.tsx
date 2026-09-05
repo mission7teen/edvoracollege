@@ -233,7 +233,10 @@ function LoginPage() {
             </Button>
 
             <div className="text-center text-xs text-muted-foreground">
-              Accounts are created by the administrator. Contact your admin for access.
+              Don't have an account?{" "}
+              <Link to="/signup" className="text-primary font-medium hover:underline">
+                Create one
+              </Link>
             </div>
           </div>
         </motion.form>
