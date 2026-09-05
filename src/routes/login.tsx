@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Lock, Mail, ShieldCheck } from "lucide-react";
@@ -233,7 +233,10 @@ function LoginPage() {
             </Button>
 
             <div className="text-center text-xs text-muted-foreground">
-              Accounts are created by the administrator. Contact your admin for access.
+              Don't have an account?{" "}
+              <Link to="/signup" className="text-primary font-medium hover:underline">
+                Create one
+              </Link>
             </div>
           </div>
         </motion.form>
