@@ -1,4 +1,6 @@
 import { createFileRoute, useRouterState } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { checkSheetsConnection } from "@/lib/sheets.functions";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { AppShell } from "@/components/AppShell";
@@ -917,6 +919,64 @@ function RolesSection() {
 
 
 
+function SheetsConnection() {
+  const check = useServerFn(checkSheetsConnection);
+  const [state, setState] = useState<{ loading: boolean; connected?: boolean; message?: string }>({
+    loading: true,
+  });
+
+  const run = async () => {
+    setState({ loading: true });
+    try {
+      const r = await check({});
+      setState({ loading: false, connected: r.connected, message: r.message });
+    } catch (e: any) {
+      setState({ loading: false, connected: false, message: e?.message || "Check failed" });
+    }
+  };
+
+  useEffect(() => {
+    void run();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div className="rounded-xl border border-border p-4 space-y-3">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-sm font-semibold">Google Sheets account</div>
+          <p className="text-xs text-muted-foreground">
+            {state.loading
+              ? "Checking your Google sign-in…"
+              : state.message || "Not signed in to Google."}
+          </p>
+        </div>
+        <span
+          className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${
+            state.loading
+              ? "bg-muted text-muted-foreground"
+              : state.connected
+                ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                : "bg-destructive/15 text-destructive"
+          }`}
+        >
+          {state.loading ? "Checking" : state.connected ? "Signed in" : "Signed out"}
+        </span>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" variant="outline" onClick={run} disabled={state.loading}>
+          {state.connected ? "Re-check sign-in" : "Sign in / retry"}
+        </Button>
+        <Button type="button" variant="ghost" asChild>
+          <a href="https://docs.google.com/spreadsheets/u/0/" target="_blank" rel="noreferrer">
+            Open Google Sheets
+          </a>
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function NotificationsSection() {
   const { form, setForm, save } = useSettingsForm();
   return (
@@ -925,6 +985,7 @@ function NotificationsSection() {
       desc="WhatsApp absentee alerts and spreadsheet sync."
       icon={MessageSquare}
     >
+      <SheetsConnection />
       <div className="space-y-3">
         <Toggle
           label="WhatsApp absentee list on attendance save"
@@ -938,6 +999,7 @@ function NotificationsSection() {
           onChange={(v) => setForm({ ...form, sheetsEnabled: v })}
         />
       </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <F label="WhatsApp receiver ID">
           <Input

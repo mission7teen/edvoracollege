@@ -215,6 +215,37 @@ const fnf = (p: PromiseLike<any>) => {
     .catch((e) => console.error("[supabase]", e));
 };
 
+// ---- per-account appearance preferences (stored in the backend, not the device) ----
+async function savePrefs(patch: Record<string, any>) {
+  try {
+    const { data } = await supabase.auth.getUser();
+    const uid = data.user?.id;
+    if (!uid) return;
+    const res = await (supabase.from("user_preferences" as any) as any).upsert(
+      { user_id: uid, ...patch, updated_at: new Date().toISOString() },
+      { onConflict: "user_id" },
+    );
+    if (res?.error) console.error("[prefs]", res.error);
+  } catch (e) {
+    console.error("[prefs]", e);
+  }
+}
+
+async function loadPrefs() {
+  try {
+    const { data } = await supabase.auth.getUser();
+    const uid = data.user?.id;
+    if (!uid) return null;
+    const res = await (supabase.from("user_preferences" as any) as any)
+      .select("*")
+      .eq("user_id", uid)
+      .maybeSingle();
+    return (res?.data as any) || null;
+  } catch {
+    return null;
+  }
+}
+
 async function fetchAll() {
   const [c, b, t, s, a, set, sh, ex, em, pp, sp] = await Promise.all([
     supabase.from("courses").select("*"),
@@ -270,6 +301,7 @@ export const useData = create<DataState>()(
         if (get().hydrated) return;
         try {
           const { c, b, t, s, a, set: settingsRow, sh, ex, em, pp, sp } = await fetchAll();
+          const prefs = await loadPrefs();
           const settings = settingsRow?.data?.data
             ? { ...defaultSettings, ...(settingsRow.data.data as any) }
             : defaultSettings;
@@ -287,8 +319,20 @@ export const useData = create<DataState>()(
             examMarks: (em?.data || []).map(rowToMark),
             paymentPackages: (pp?.data || []).map(rowToPkg),
             studentPayments: (sp?.data || []).map(rowToPay),
+            ...(prefs
+              ? {
+                  theme: (prefs.theme === "dark" ? "dark" : "light") as "light" | "dark",
+                  accent: prefs.accent || DEFAULT_ACCENT,
+                  customAccents: prefs.custom_accents || [],
+                }
+              : {}),
             hydrated: true,
           });
+          if (!prefs) {
+            const st = get();
+            savePrefs({ theme: st.theme, accent: st.accent, custom_accents: st.customAccents });
+          }
+
         } catch (e) {
           console.error("[hydrate]", e);
           set({ hydrated: true });
@@ -400,14 +444,26 @@ export const useData = create<DataState>()(
         set({ settings });
         fnf(supabase.rpc("save_app_settings", { _data: settings as any }));
       },
-      setTheme: (t) => set({ theme: t }),
-      setAccent: (hex) => set({ accent: hex }),
+      setTheme: (t) => {
+        set({ theme: t });
+        savePrefs({ theme: t });
+      },
+      setAccent: (hex) => {
+        set({ accent: hex });
+        savePrefs({ accent: hex });
+      },
       addCustomAccent: (hex) => {
         const list = get().customAccents;
-        set({ customAccents: list.includes(hex) ? list : [...list, hex], accent: hex });
+        const custom = list.includes(hex) ? list : [...list, hex];
+        set({ customAccents: custom, accent: hex });
+        savePrefs({ accent: hex, custom_accents: custom });
       },
-      removeCustomAccent: (hex) =>
-        set({ customAccents: get().customAccents.filter((c) => c !== hex) }),
+      removeCustomAccent: (hex) => {
+        const custom = get().customAccents.filter((c) => c !== hex);
+        set({ customAccents: custom });
+        savePrefs({ custom_accents: custom });
+      },
+
       setSubjectSheetId: (key, spreadsheetId) => {
         set({ subjectSheetIds: { ...get().subjectSheetIds, [key]: spreadsheetId } });
         fnf(supabase.rpc("save_subject_sheet", { _key: key, _spreadsheet_id: spreadsheetId }));
