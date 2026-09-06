@@ -421,3 +421,37 @@ export const saveAttendanceToSheets = createServerFn({ method: "POST" })
       rowsSaved: data.rows.length,
     };
   });
+
+/** Reports whether the Google Sheets account connection is live, and who it belongs to. */
+export const checkSheetsConnection = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async () => {
+    const lk = process.env.LOVABLE_API_KEY;
+    const gk = process.env.GOOGLE_SHEETS_API_KEY;
+    if (!lk || !gk) {
+      return { connected: false, message: "No Google account is linked yet." };
+    }
+    try {
+      const res = await fetch("https://connector-gateway.lovable.dev/api/v1/verify_credentials", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${lk}`,
+          "X-Connection-Api-Key": gk,
+          "Content-Type": "application/json",
+        },
+      });
+      const text = await res.text();
+      if (!res.ok) {
+        console.error(`[sheets verify] ${res.status}: ${text}`);
+        return { connected: false, message: `Sign-in check failed (${res.status}). ${text}` };
+      }
+      const body = text ? JSON.parse(text) : {};
+      const outcome = body?.outcome as string | undefined;
+      if (outcome === "failed") {
+        return { connected: false, message: body?.error || "Google sign-in has expired." };
+      }
+      return { connected: true, message: "Signed in to Google Sheets." };
+    } catch (e: any) {
+      return { connected: false, message: e?.message || "Could not reach Google Sheets." };
+    }
+  });
