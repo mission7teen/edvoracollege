@@ -619,6 +619,33 @@ export type Database = {
           },
         ]
       }
+      user_preferences: {
+        Row: {
+          accent: string
+          custom_accents: string[]
+          density: string
+          theme: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accent?: string
+          custom_accents?: string[]
+          density?: string
+          theme?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accent?: string
+          custom_accents?: string[]
+          density?: string
+          theme?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           college_id: string | null
