@@ -924,6 +924,7 @@ function SheetsConnection() {
   const [state, setState] = useState<{ loading: boolean; connected?: boolean; message?: string }>({
     loading: true,
   });
+  const [confirmDisconnect, setConfirmDisconnect] = useState(false);
 
   const run = async () => {
     setState({ loading: true });
