@@ -1,4 +1,6 @@
 import { createFileRoute, useRouterState } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { checkSheetsConnection } from "@/lib/sheets.functions";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { AppShell } from "@/components/AppShell";
