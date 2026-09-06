@@ -400,14 +400,26 @@ export const useData = create<DataState>()(
         set({ settings });
         fnf(supabase.rpc("save_app_settings", { _data: settings as any }));
       },
-      setTheme: (t) => set({ theme: t }),
-      setAccent: (hex) => set({ accent: hex }),
+      setTheme: (t) => {
+        set({ theme: t });
+        savePrefs({ theme: t });
+      },
+      setAccent: (hex) => {
+        set({ accent: hex });
+        savePrefs({ accent: hex });
+      },
       addCustomAccent: (hex) => {
         const list = get().customAccents;
-        set({ customAccents: list.includes(hex) ? list : [...list, hex], accent: hex });
+        const custom = list.includes(hex) ? list : [...list, hex];
+        set({ customAccents: custom, accent: hex });
+        savePrefs({ accent: hex, custom_accents: custom });
       },
-      removeCustomAccent: (hex) =>
-        set({ customAccents: get().customAccents.filter((c) => c !== hex) }),
+      removeCustomAccent: (hex) => {
+        const custom = get().customAccents.filter((c) => c !== hex);
+        set({ customAccents: custom });
+        savePrefs({ custom_accents: custom });
+      },
+
       setSubjectSheetId: (key, spreadsheetId) => {
         set({ subjectSheetIds: { ...get().subjectSheetIds, [key]: spreadsheetId } });
         fnf(supabase.rpc("save_subject_sheet", { _key: key, _spreadsheet_id: spreadsheetId }));
