@@ -301,6 +301,7 @@ export const useData = create<DataState>()(
         if (get().hydrated) return;
         try {
           const { c, b, t, s, a, set: settingsRow, sh, ex, em, pp, sp } = await fetchAll();
+          const prefs = await loadPrefs();
           const settings = settingsRow?.data?.data
             ? { ...defaultSettings, ...(settingsRow.data.data as any) }
             : defaultSettings;
@@ -318,8 +319,20 @@ export const useData = create<DataState>()(
             examMarks: (em?.data || []).map(rowToMark),
             paymentPackages: (pp?.data || []).map(rowToPkg),
             studentPayments: (sp?.data || []).map(rowToPay),
+            ...(prefs
+              ? {
+                  theme: (prefs.theme === "dark" ? "dark" : "light") as "light" | "dark",
+                  accent: prefs.accent || DEFAULT_ACCENT,
+                  customAccents: prefs.custom_accents || [],
+                }
+              : {}),
             hydrated: true,
           });
+          if (!prefs) {
+            const st = get();
+            savePrefs({ theme: st.theme, accent: st.accent, custom_accents: st.customAccents });
+          }
+
         } catch (e) {
           console.error("[hydrate]", e);
           set({ hydrated: true });
