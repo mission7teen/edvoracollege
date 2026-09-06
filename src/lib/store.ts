@@ -215,6 +215,37 @@ const fnf = (p: PromiseLike<any>) => {
     .catch((e) => console.error("[supabase]", e));
 };
 
+// ---- per-account appearance preferences (stored in the backend, not the device) ----
+async function savePrefs(patch: Record<string, any>) {
+  try {
+    const { data } = await supabase.auth.getUser();
+    const uid = data.user?.id;
+    if (!uid) return;
+    const res = await (supabase.from("user_preferences" as any) as any).upsert(
+      { user_id: uid, ...patch, updated_at: new Date().toISOString() },
+      { onConflict: "user_id" },
+    );
+    if (res?.error) console.error("[prefs]", res.error);
+  } catch (e) {
+    console.error("[prefs]", e);
+  }
+}
+
+async function loadPrefs() {
+  try {
+    const { data } = await supabase.auth.getUser();
+    const uid = data.user?.id;
+    if (!uid) return null;
+    const res = await (supabase.from("user_preferences" as any) as any)
+      .select("*")
+      .eq("user_id", uid)
+      .maybeSingle();
+    return (res?.data as any) || null;
+  } catch {
+    return null;
+  }
+}
+
 async function fetchAll() {
   const [c, b, t, s, a, set, sh, ex, em, pp, sp] = await Promise.all([
     supabase.from("courses").select("*"),
