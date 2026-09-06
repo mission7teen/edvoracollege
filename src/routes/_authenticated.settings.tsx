@@ -972,7 +972,44 @@ function SheetsConnection() {
             Open Google Sheets
           </a>
         </Button>
+        {state.connected && (
+          <Button
+            type="button"
+            variant="ghost"
+            className="text-destructive hover:text-destructive"
+            onClick={() => setConfirmDisconnect(true)}
+          >
+            Disconnect
+          </Button>
+        )}
       </div>
+
+      <AlertDialog open={confirmDisconnect} onOpenChange={setConfirmDisconnect}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Disconnect Google Sheets?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The Google account is linked to this app at the workspace level, so it can only be
+              fully removed from your Lovable connector settings (Settings → Connectors → Google
+              Sheets → Disconnect). While disconnected, attendance will stop syncing to
+              spreadsheets.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep connected</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setConfirmDisconnect(false);
+                toast.info("Open Lovable Settings → Connectors to remove the Google Sheets link.", {
+                  duration: 6000,
+                });
+              }}
+            >
+              Got it
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
