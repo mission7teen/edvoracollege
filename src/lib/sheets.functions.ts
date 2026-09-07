@@ -24,26 +24,41 @@ const InputSchema = z.object({
   rows: z.array(RowSchema).min(1),
 });
 
-function authHeaders() {
+/** Builds a gateway caller bound to one college's own Google connection. */
+function makeGw(connectionKey: string) {
   const lk = process.env.LOVABLE_API_KEY;
-  const gk = process.env.GOOGLE_SHEETS_API_KEY;
-  if (!lk || !gk) throw new Error("Google Sheets connection is not configured");
-  return {
-    Authorization: `Bearer ${lk}`,
-    "X-Connection-Api-Key": gk,
-    "Content-Type": "application/json",
+  if (!lk) throw new Error("Google Sheets connection is not configured");
+  return async function gw(path: string, init?: RequestInit) {
+    const res = await fetch(`${GATEWAY}${path}`, {
+      ...init,
+      headers: {
+        Authorization: `Bearer ${lk}`,
+        "X-Connection-Api-Key": connectionKey,
+        "Content-Type": "application/json",
+        ...(init?.headers || {}),
+      },
+    });
+    const text = await res.text();
+    if (!res.ok) throw new Error(`Sheets API ${res.status}: ${text}`);
+    return text ? JSON.parse(text) : {};
   };
 }
 
-async function gw(path: string, init?: RequestInit) {
-  const res = await fetch(`${GATEWAY}${path}`, {
-    ...init,
-    headers: { ...authHeaders(), ...(init?.headers || {}) },
-  });
-  const text = await res.text();
-  if (!res.ok) throw new Error(`Sheets API ${res.status}: ${text}`);
-  return text ? JSON.parse(text) : {};
+/** The Google connection belonging to the signed-in user's college. */
+async function collegeGw(userId: string) {
+  const { getCollegeIdForUser, getConnectionKeyForCollege } = await import(
+    "@/lib/app-user-connections.server"
+  );
+  const collegeId = await getCollegeIdForUser(userId);
+  if (!collegeId) throw new Error("Finish your college setup first.");
+  const key = await getConnectionKeyForCollege(collegeId, "google_sheets");
+  if (!key)
+    throw new Error(
+      "Your college has not connected a Google account yet. Open Settings → Notifications to sign in.",
+    );
+  return makeGw(key);
 }
+
 
 function colLetter(n: number): string {
   let s = "";
@@ -171,7 +186,8 @@ function buildFormattingRequests(opts: { sheetId: number; dateCount: number; stu
 export const saveAttendanceToSheets = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => InputSchema.parse(d))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const gw = await collegeGw(context.userId);
     const [yStr, mStr] = data.month.split("-");
     const year = parseInt(yStr, 10);
     const monthIdx = parseInt(mStr, 10) - 1;
@@ -422,35 +438,41 @@ export const saveAttendanceToSheets = createServerFn({ method: "POST" })
     };
   });
 
-/** Reports whether the Google Sheets account connection is live, and who it belongs to. */
+/** Reports whether this college's own Google account is connected. */
 export const checkSheetsConnection = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async () => {
+  .handler(async ({ context }) => {
     const lk = process.env.LOVABLE_API_KEY;
-    const gk = process.env.GOOGLE_SHEETS_API_KEY;
-    if (!lk || !gk) {
-      return { connected: false, message: "No Google account is linked yet." };
+    const { getCollegeIdForUser, getConnectionRowForCollege } = await import(
+      "@/lib/app-user-connections.server"
+    );
+    const collegeId = await getCollegeIdForUser(context.userId);
+    if (!collegeId) {
+      return { connected: false, message: "Finish your college setup first." };
+    }
+    const row = await getConnectionRowForCollege(collegeId, "google_sheets");
+    if (!lk || !row) {
+      return { connected: false, message: "This college has not connected a Google account yet." };
     }
     try {
       const res = await fetch("https://connector-gateway.lovable.dev/api/v1/verify_credentials", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${lk}`,
-          "X-Connection-Api-Key": gk,
+          "X-Connection-Api-Key": row.connectionAPIKey,
           "Content-Type": "application/json",
         },
       });
       const text = await res.text();
       if (!res.ok) {
         console.error(`[sheets verify] ${res.status}: ${text}`);
-        return { connected: false, message: `Sign-in check failed (${res.status}). ${text}` };
+        return { connected: false, message: `Sign-in check failed (${res.status}).` };
       }
       const body = text ? JSON.parse(text) : {};
-      const outcome = body?.outcome as string | undefined;
-      if (outcome === "failed") {
+      if (body?.outcome === "failed") {
         return { connected: false, message: body?.error || "Google sign-in has expired." };
       }
-      return { connected: true, message: "Signed in to Google Sheets." };
+      return { connected: true, message: "This college is signed in to Google Sheets." };
     } catch (e: any) {
       return { connected: false, message: e?.message || "Could not reach Google Sheets." };
     }
