@@ -1,6 +1,11 @@
 import { createFileRoute, useRouterState } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { checkSheetsConnection } from "@/lib/sheets.functions";
+import {
+  startSheetsConnect,
+  completeSheetsConnect,
+  disconnectSheets,
+} from "@/lib/sheets-connect.functions";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { AppShell } from "@/components/AppShell";
@@ -919,11 +924,48 @@ function RolesSection() {
 
 
 
+function waitForOAuthCompletion(popup: Window) {
+  return new Promise<string | null>((resolve, reject) => {
+    let poll: number | undefined;
+    const cleanup = () => {
+      window.removeEventListener("message", onMessage);
+      if (poll !== undefined) window.clearInterval(poll);
+    };
+    const onMessage = (event: MessageEvent) => {
+      const type = event.data?.type;
+      if (
+        event.origin !== window.location.origin ||
+        event.source !== popup ||
+        event.data?.connectorId !== "google_sheets" ||
+        (type !== "appUserConnectorOAuthComplete" && type !== "appUserConnectorOAuthFailed")
+      )
+        return;
+      cleanup();
+      if (type === "appUserConnectorOAuthComplete") {
+        resolve(typeof event.data?.code === "string" ? event.data.code : null);
+        return;
+      }
+      popup.close();
+      reject(new Error("Google sign-in failed."));
+    };
+    window.addEventListener("message", onMessage);
+    poll = window.setInterval(() => {
+      if (!popup.closed) return;
+      cleanup();
+      reject(new Error("Sign-in window closed before finishing."));
+    }, 500);
+  });
+}
+
 function SheetsConnection() {
   const check = useServerFn(checkSheetsConnection);
+  const startConnect = useServerFn(startSheetsConnect);
+  const completeConnect = useServerFn(completeSheetsConnect);
+  const disconnect = useServerFn(disconnectSheets);
   const [state, setState] = useState<{ loading: boolean; connected?: boolean; message?: string }>({
     loading: true,
   });
+  const [busy, setBusy] = useState(false);
   const [confirmDisconnect, setConfirmDisconnect] = useState(false);
 
   const run = async () => {
@@ -941,6 +983,50 @@ function SheetsConnection() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const connect = async () => {
+    const popup = window.open("", "edvora-google-oauth", "width=600,height=720");
+    if (!popup) {
+      toast.error("Allow pop-ups for this site, then try again.");
+      return;
+    }
+    setBusy(true);
+    let code: string | null = null;
+    try {
+      const { authorizationUrl } = await startConnect({});
+      const completion = waitForOAuthCompletion(popup);
+      popup.location.href = authorizationUrl;
+      code = await completion;
+    } catch (e: any) {
+      popup.close();
+      setBusy(false);
+      toast.error(e?.message || "Google sign-in failed.");
+      return;
+    }
+    try {
+      if (code) await completeConnect({ data: { code } });
+      toast.success("Google account connected for this college.");
+      await run();
+    } catch (e: any) {
+      toast.error(e?.message || "Could not save the Google connection.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const doDisconnect = async () => {
+    setConfirmDisconnect(false);
+    setBusy(true);
+    try {
+      await disconnect({});
+      toast.success("Google account disconnected.");
+      await run();
+    } catch (e: any) {
+      toast.error(e?.message || "Could not disconnect.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <div className="rounded-xl border border-border p-4 space-y-3">
       <div className="flex items-start justify-between gap-3">
@@ -948,8 +1034,11 @@ function SheetsConnection() {
           <div className="text-sm font-semibold">Google Sheets account</div>
           <p className="text-xs text-muted-foreground">
             {state.loading
-              ? "Checking your Google sign-in…"
+              ? "Checking this college's Google sign-in…"
               : state.message || "Not signed in to Google."}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Attendance sheets are created in this college's own Google Drive.
           </p>
         </div>
         <span
@@ -965,8 +1054,16 @@ function SheetsConnection() {
         </span>
       </div>
       <div className="flex flex-wrap gap-2">
-        <Button type="button" variant="outline" onClick={run} disabled={state.loading}>
-          {state.connected ? "Re-check sign-in" : "Sign in / retry"}
+        <Button
+          type="button"
+          className="gradient-primary text-primary-foreground"
+          onClick={connect}
+          disabled={busy || state.loading}
+        >
+          {state.connected ? "Switch Google account" : "Sign in with Google"}
+        </Button>
+        <Button type="button" variant="outline" onClick={run} disabled={busy || state.loading}>
+          Re-check
         </Button>
         <Button type="button" variant="ghost" asChild>
           <a href="https://docs.google.com/spreadsheets/u/0/" target="_blank" rel="noreferrer">
@@ -979,6 +1076,7 @@ function SheetsConnection() {
             variant="ghost"
             className="text-destructive hover:text-destructive"
             onClick={() => setConfirmDisconnect(true)}
+            disabled={busy}
           >
             Disconnect
           </Button>
@@ -990,24 +1088,13 @@ function SheetsConnection() {
           <AlertDialogHeader>
             <AlertDialogTitle>Disconnect Google Sheets?</AlertDialogTitle>
             <AlertDialogDescription>
-              The Google account is linked to this app at the workspace level, so it can only be
-              fully removed from your Lovable connector settings (Settings → Connectors → Google
-              Sheets → Disconnect). While disconnected, attendance will stop syncing to
-              spreadsheets.
+              This college's Google account will be unlinked and attendance will stop syncing to
+              spreadsheets. Existing spreadsheets stay in the Google Drive they were created in.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Keep connected</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                setConfirmDisconnect(false);
-                toast.info("Open Lovable Settings → Connectors to remove the Google Sheets link.", {
-                  duration: 6000,
-                });
-              }}
-            >
-              Got it
-            </AlertDialogAction>
+            <AlertDialogAction onClick={doDisconnect}>Disconnect</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
