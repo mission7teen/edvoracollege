@@ -438,35 +438,41 @@ export const saveAttendanceToSheets = createServerFn({ method: "POST" })
     };
   });
 
-/** Reports whether the Google Sheets account connection is live, and who it belongs to. */
+/** Reports whether this college's own Google account is connected. */
 export const checkSheetsConnection = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async () => {
+  .handler(async ({ context }) => {
     const lk = process.env.LOVABLE_API_KEY;
-    const gk = process.env.GOOGLE_SHEETS_API_KEY;
-    if (!lk || !gk) {
-      return { connected: false, message: "No Google account is linked yet." };
+    const { getCollegeIdForUser, getConnectionRowForCollege } = await import(
+      "@/lib/app-user-connections.server"
+    );
+    const collegeId = await getCollegeIdForUser(context.userId);
+    if (!collegeId) {
+      return { connected: false, message: "Finish your college setup first." };
+    }
+    const row = await getConnectionRowForCollege(collegeId, "google_sheets");
+    if (!lk || !row) {
+      return { connected: false, message: "This college has not connected a Google account yet." };
     }
     try {
       const res = await fetch("https://connector-gateway.lovable.dev/api/v1/verify_credentials", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${lk}`,
-          "X-Connection-Api-Key": gk,
+          "X-Connection-Api-Key": row.connectionAPIKey,
           "Content-Type": "application/json",
         },
       });
       const text = await res.text();
       if (!res.ok) {
         console.error(`[sheets verify] ${res.status}: ${text}`);
-        return { connected: false, message: `Sign-in check failed (${res.status}). ${text}` };
+        return { connected: false, message: `Sign-in check failed (${res.status}).` };
       }
       const body = text ? JSON.parse(text) : {};
-      const outcome = body?.outcome as string | undefined;
-      if (outcome === "failed") {
+      if (body?.outcome === "failed") {
         return { connected: false, message: body?.error || "Google sign-in has expired." };
       }
-      return { connected: true, message: "Signed in to Google Sheets." };
+      return { connected: true, message: "This college is signed in to Google Sheets." };
     } catch (e: any) {
       return { connected: false, message: e?.message || "Could not reach Google Sheets." };
     }
