@@ -29,6 +29,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedBatchesRouteImport } from './routes/_authenticated.batches'
 import { Route as AuthenticatedAttendanceRouteImport } from './routes/_authenticated.attendance'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated.analytics'
+import { Route as OauthGoogleSheetsReturnRouteImport } from './routes/oauth.google-sheets.return'
 import { Route as ApiPublicManifestDotwebmanifestRouteImport } from './routes/api/public/manifest[.]webmanifest'
 import { Route as ApiPublicBrandIconDotpngRouteImport } from './routes/api/public/brand-icon[.]png'
 
@@ -131,6 +132,11 @@ const AuthenticatedAnalyticsRoute = AuthenticatedAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const OauthGoogleSheetsReturnRoute = OauthGoogleSheetsReturnRouteImport.update({
+  id: '/oauth/google-sheets/return',
+  path: '/oauth/google-sheets/return',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicManifestDotwebmanifestRoute =
   ApiPublicManifestDotwebmanifestRouteImport.update({
     id: '/api/public/manifest.webmanifest',
@@ -166,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/guides/attendance-sheets': typeof GuidesAttendanceSheetsRoute
   '/api/public/brand-icon.png': typeof ApiPublicBrandIconDotpngRoute
   '/api/public/manifest.webmanifest': typeof ApiPublicManifestDotwebmanifestRoute
+  '/oauth/google-sheets/return': typeof OauthGoogleSheetsReturnRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -189,6 +196,7 @@ export interface FileRoutesByTo {
   '/guides/attendance-sheets': typeof GuidesAttendanceSheetsRoute
   '/api/public/brand-icon.png': typeof ApiPublicBrandIconDotpngRoute
   '/api/public/manifest.webmanifest': typeof ApiPublicManifestDotwebmanifestRoute
+  '/oauth/google-sheets/return': typeof OauthGoogleSheetsReturnRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -214,6 +222,7 @@ export interface FileRoutesById {
   '/guides/attendance-sheets': typeof GuidesAttendanceSheetsRoute
   '/api/public/brand-icon.png': typeof ApiPublicBrandIconDotpngRoute
   '/api/public/manifest.webmanifest': typeof ApiPublicManifestDotwebmanifestRoute
+  '/oauth/google-sheets/return': typeof OauthGoogleSheetsReturnRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -239,6 +248,7 @@ export interface FileRouteTypes {
     | '/guides/attendance-sheets'
     | '/api/public/brand-icon.png'
     | '/api/public/manifest.webmanifest'
+    | '/oauth/google-sheets/return'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -262,6 +272,7 @@ export interface FileRouteTypes {
     | '/guides/attendance-sheets'
     | '/api/public/brand-icon.png'
     | '/api/public/manifest.webmanifest'
+    | '/oauth/google-sheets/return'
   id:
     | '__root__'
     | '/'
@@ -286,6 +297,7 @@ export interface FileRouteTypes {
     | '/guides/attendance-sheets'
     | '/api/public/brand-icon.png'
     | '/api/public/manifest.webmanifest'
+    | '/oauth/google-sheets/return'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -299,6 +311,7 @@ export interface RootRouteChildren {
   GuidesAttendanceSheetsRoute: typeof GuidesAttendanceSheetsRoute
   ApiPublicBrandIconDotpngRoute: typeof ApiPublicBrandIconDotpngRoute
   ApiPublicManifestDotwebmanifestRoute: typeof ApiPublicManifestDotwebmanifestRoute
+  OauthGoogleSheetsReturnRoute: typeof OauthGoogleSheetsReturnRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -443,6 +456,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAnalyticsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/oauth/google-sheets/return': {
+      id: '/oauth/google-sheets/return'
+      path: '/oauth/google-sheets/return'
+      fullPath: '/oauth/google-sheets/return'
+      preLoaderRoute: typeof OauthGoogleSheetsReturnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/manifest.webmanifest': {
       id: '/api/public/manifest.webmanifest'
       path: '/api/public/manifest.webmanifest'
@@ -505,6 +525,7 @@ const rootRouteChildren: RootRouteChildren = {
   GuidesAttendanceSheetsRoute: GuidesAttendanceSheetsRoute,
   ApiPublicBrandIconDotpngRoute: ApiPublicBrandIconDotpngRoute,
   ApiPublicManifestDotwebmanifestRoute: ApiPublicManifestDotwebmanifestRoute,
+  OauthGoogleSheetsReturnRoute: OauthGoogleSheetsReturnRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

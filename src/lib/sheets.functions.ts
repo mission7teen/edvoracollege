@@ -24,26 +24,41 @@ const InputSchema = z.object({
   rows: z.array(RowSchema).min(1),
 });
 
-function authHeaders() {
+/** Builds a gateway caller bound to one college's own Google connection. */
+function makeGw(connectionKey: string) {
   const lk = process.env.LOVABLE_API_KEY;
-  const gk = process.env.GOOGLE_SHEETS_API_KEY;
-  if (!lk || !gk) throw new Error("Google Sheets connection is not configured");
-  return {
-    Authorization: `Bearer ${lk}`,
-    "X-Connection-Api-Key": gk,
-    "Content-Type": "application/json",
+  if (!lk) throw new Error("Google Sheets connection is not configured");
+  return async function gw(path: string, init?: RequestInit) {
+    const res = await fetch(`${GATEWAY}${path}`, {
+      ...init,
+      headers: {
+        Authorization: `Bearer ${lk}`,
+        "X-Connection-Api-Key": connectionKey,
+        "Content-Type": "application/json",
+        ...(init?.headers || {}),
+      },
+    });
+    const text = await res.text();
+    if (!res.ok) throw new Error(`Sheets API ${res.status}: ${text}`);
+    return text ? JSON.parse(text) : {};
   };
 }
 
-async function gw(path: string, init?: RequestInit) {
-  const res = await fetch(`${GATEWAY}${path}`, {
-    ...init,
-    headers: { ...authHeaders(), ...(init?.headers || {}) },
-  });
-  const text = await res.text();
-  if (!res.ok) throw new Error(`Sheets API ${res.status}: ${text}`);
-  return text ? JSON.parse(text) : {};
+/** The Google connection belonging to the signed-in user's college. */
+async function collegeGw(userId: string) {
+  const { getCollegeIdForUser, getConnectionKeyForCollege } = await import(
+    "@/lib/app-user-connections.server"
+  );
+  const collegeId = await getCollegeIdForUser(userId);
+  if (!collegeId) throw new Error("Finish your college setup first.");
+  const key = await getConnectionKeyForCollege(collegeId, "google_sheets");
+  if (!key)
+    throw new Error(
+      "Your college has not connected a Google account yet. Open Settings → Notifications to sign in.",
+    );
+  return makeGw(key);
 }
+
 
 function colLetter(n: number): string {
   let s = "";
