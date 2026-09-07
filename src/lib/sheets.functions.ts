@@ -186,7 +186,8 @@ function buildFormattingRequests(opts: { sheetId: number; dateCount: number; stu
 export const saveAttendanceToSheets = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => InputSchema.parse(d))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const gw = await collegeGw(context.userId);
     const [yStr, mStr] = data.month.split("-");
     const year = parseInt(yStr, 10);
     const monthIdx = parseInt(mStr, 10) - 1;
